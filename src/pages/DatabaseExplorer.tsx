@@ -4,7 +4,7 @@ import { api, type ExplorerPage, type ExplorerTable, type ReportKey } from '../s
 import { DataTable, PageToolbar, SearchControl, SectionHeading, SelectControl } from '../components/ui'
 import { SqlBlock } from '../components/SqlBlock'
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 10
 const LAB: { key: ReportKey; title: string; blurb: string }[] = [
   { key: 'counts', title: 'COUNT(*) per entity', blurb: 'Aggregation with conditional counts and UNION ALL' },
   { key: 'zone', title: 'Usage & billing by zone', blurb: 'LEFT JOIN + GROUP BY across consumers and bills' },
