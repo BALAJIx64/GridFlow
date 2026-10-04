@@ -317,7 +317,7 @@ To explore both perspectives of the database:
 | Portal | Access Method | Credentials |
 |---|---|---|
 | **Administrator** | Email & Password | **Email**: `balaji.c.m.x64@gmail.com`<br>**Password**: *(Entered manually during sign-in)* |
-| **Consumer Portal** | Passwordless Verification | **Email**: `arun.kumar@gmail.com`<br>**Account ID**: `CON-TN-001` |
+| **Consumer Portal** | Passwordless Verification | **Email**: `karthikeyan.ramaswamy@grid`<br>**Account ID**: `GF-TN-1001` |
 
 ---
 
@@ -325,37 +325,45 @@ To explore both perspectives of the database:
 
 <div align="center">
 
-### 1. Database Operations & SQL Console
-*Run diagnostic queries, examine execution plans, and observe database responses.*
-![Database Console](audit/20261004_202257/08_database_console_operations.png)
+### 1. Public Landing Page & Live Database Telemetry
+*Unobstructed hero view displaying live database metrics pulled from Supabase.*
+![Public Landing Page](docs/screenshots/01_landing_page.png)
 
-### 2. Table Explorer & Relational Schema Browser
-*Inspect columns, foreign keys, and raw rows across all entities.*
-![Database Explorer](audit/20261004_202257/07_database_explorer_tamilnadu_tables.png)
+### 2. Administrator Access & Authentication
+*Secure portal login requiring verified manual administrator credentials.*
+![Administrator Login](docs/screenshots/02_administrator_login.png)
 
-### 3. Executive Dashboard & Real-Time Analytics
+### 3. Database Operations & SQL Console
+*Run diagnostic queries, examine execution latency in ms, and observe database responses.*
+![Database Console](docs/screenshots/04_database_operations_console.png)
+
+### 4. Table Explorer & Relational Schema Browser
+*Inspect columns, foreign keys, and raw rows across all 12 system entities.*
+![Database Explorer](docs/screenshots/05_database_explorer.png)
+
+### 5. Executive Dashboard & Real-Time Analytics
 *Live aggregations of load curves, revenue recovery, and hardware status.*
-![Executive Dashboard](audit/20261004_202257/01_dashboard_with_tamilnadu_data.png)
+![Executive Dashboard](docs/screenshots/03_executive_dashboard.png)
 
-### 4. Consumer Management & Relational Directory
+### 6. Consumer Management & Relational Directory
 *Managing consumer entities and linking them to tariffs and zones.*
-![Consumer Directory](audit/20261004_202257/02_consumers_25_tamilnadu_records.png)
+![Consumer Directory](docs/screenshots/06_consumers_directory.png)
 
-### 5. Smart Meter Telemetry & Telemetry Monitoring
-*Tracking physical hardware units and consumption readings.*
-![Smart Meters](audit/20261004_202257/03_meters_25_connected_units.png)
+### 7. Smart Meter Telemetry & Telemetry Monitoring
+*Tracking physical hardware units, connectivity status, and cumulative consumption readings.*
+![Smart Meters](docs/screenshots/07_smart_meters_telemetry.png)
 
-### 6. Billing Engine & Revenue Recovery
+### 8. Billing Engine & Revenue Recovery
 *Automated slab-based invoices in INR (`₹`) with payment status tracking.*
-![Billing & Revenue](audit/20261004_202257/04_bills_revenue_management.png)
+![Billing & Revenue](docs/screenshots/08_bills_and_revenue.png)
 
-### 7. Field Technician Scheduling & Dispatch
+### 9. Field Technician Scheduling & Dispatch
 *Assigning service records and tracking technician availability.*
-![Field Technicians](audit/20261004_202257/05_technicians_15_tamilnadu_crew.png)
+![Field Technicians](docs/screenshots/09_technicians_field_ops.png)
 
-### 8. Consumer Self-Service Portal
-*Scoped, consumer-isolated view of meter readings and invoice payment.*
-![Consumer Portal](audit/20261004_202257/10_consumer_portal_tamilnadu_user.png)
+### 10. Consumer Self-Service Portal
+*Scoped, consumer-isolated view of meter readings, connection details, and invoice payments.*
+![Consumer Portal](docs/screenshots/10_consumer_portal.png)
 
 </div>
 
