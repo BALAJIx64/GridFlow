@@ -343,7 +343,7 @@ function titleCase(value:string){return value.charAt(0).toUpperCase()+value.slic
 
 function EntityModal({modal,close,zones,consumers,meters,bills,technicians,refresh,notify}:{modal:Modal;close:()=>void;zones:Zone[];consumers:Consumer[];meters:Meter[];bills:Bill[];technicians:Technician[];refresh:()=>Promise<void>;notify:(m:string,k?:'success'|'error')=>void}){
  const current=modal.id?consumers.find(x=>x.id===modal.id):undefined,currentMeter=modal.id?meters.find(x=>x.id===modal.id):undefined,currentTechnician=modal.id?technicians.find(x=>x.id===modal.id):undefined,isEdit=!!modal.id
- const [name,setName]=useState(current?.name||currentTechnician?.name||''),[account,setAccount]=useState(current?.account||''),[address,setAddress]=useState(current?.address||''),[zone,setZone]=useState(current?.zone||currentTechnician?.zone||(zones[0]?.name||'North End')),[plan,setPlan]=useState(current?.plan||'Residential'),[email,setEmail]=useState(current?.email||''),[phone,setPhone]=useState(current?.phone||''),[status,setStatus]=useState<string>(current?.status||'Active'),[meterSerial,setMeterSerial]=useState(currentMeter?.serial||''),[consumerId,setConsumerId]=useState(currentMeter?.consumerId||consumers[0]?.id||''),[readingMeter,setReadingMeter]=useState(meters[0]?.id||''),[reading,setReading]=useState(''),[readingDate,setReadingDate]=useState(new Date().toISOString().slice(0,16)),[serviceTech,setServiceTech]=useState(technicians[0]?.id||''),[serviceConsumer,setServiceConsumer]=useState(consumers[0]?.id||''),[serviceMeter,setServiceMeter]=useState(meters[0]?.id||''),[serviceSummary,setServiceSummary]=useState(''),[servicePriority,setServicePriority]=useState('normal'),[serviceDate,setServiceDate]=useState(new Date().toISOString().slice(0,16)),[error,setError]=useState(''),[saving,setSaving]=useState(false),[blockers,setBlockers]=useState<string[]>([])
+ const [name,setName]=useState(current?.name||currentTechnician?.name||''),[account,setAccount]=useState(current?.account||`GF-${Math.floor(2000 + Math.random() * 8000)}`),[address,setAddress]=useState(current?.address||''),[zone,setZone]=useState(current?.zone||currentTechnician?.zone||(zones[0]?.name||'North End')),[plan,setPlan]=useState(current?.plan||'Residential'),[email,setEmail]=useState(current?.email||''),[phone,setPhone]=useState(current?.phone||''),[status,setStatus]=useState<string>(current?.status||'Active'),[meterSerial,setMeterSerial]=useState(currentMeter?.serial||`MT-${Math.floor(10000 + Math.random() * 90000)}`),[consumerId,setConsumerId]=useState(currentMeter?.consumerId||consumers[0]?.id||''),[readingMeter,setReadingMeter]=useState(meters[0]?.id||''),[reading,setReading]=useState(''),[readingDate,setReadingDate]=useState(new Date().toISOString().slice(0,16)),[serviceTech,setServiceTech]=useState(technicians[0]?.id||''),[serviceConsumer,setServiceConsumer]=useState(consumers[0]?.id||''),[serviceMeter,setServiceMeter]=useState(meters[0]?.id||''),[serviceSummary,setServiceSummary]=useState(''),[servicePriority,setServicePriority]=useState('normal'),[serviceDate,setServiceDate]=useState(new Date().toISOString().slice(0,16)),[error,setError]=useState(''),[saving,setSaving]=useState(false),[blockers,setBlockers]=useState<string[]>([])
  const zoneOptions=zones.length?zones.map(z=>z.name):['North End','Riverside','Midtown','Eastside']
 
  useEffect(()=>{
@@ -355,7 +355,53 @@ function EntityModal({modal,close,zones,consumers,meters,bills,technicians,refre
  const cycleLabel=new Intl.DateTimeFormat('en-IN',{month:'long',year:'numeric'}).format(new Date()),dueLabel=new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'long',year:'numeric'}).format(new Date(new Date().getFullYear(),new Date().getMonth()+1,14))
  const title=modal.type==='consumer'?(isEdit?'Edit consumer':'Add consumer'):modal.type==='meter'?(isEdit?'Meter details':'Register meter'):modal.type==='reading'?'Record meter reading':modal.type==='service'?'Schedule service':modal.type==='technician'?(isEdit?'Technician profile':'Add technician'):modal.type==='bill'?'Generate bills':modal.type==='delete'?'Delete consumer':'Consumer details'
 
- const submit=async(e:React.FormEvent)=>{e.preventDefault();setError('');setSaving(true);try{if(modal.type==='consumer'){if(!name.trim()||!account.trim()||!address.trim())throw new Error('Name, account ID, and service address are required.');await api.consumer({name,account,address,zone,plan,status:status as Consumer['status'],email,phone},current?.id);notify(isEdit?'Consumer updated successfully.':'Consumer created successfully.')}else if(modal.type==='meter'){if(!meterSerial.trim()||!consumerId)throw new Error('Meter serial and assigned consumer are required.');await api.meter(meterSerial,consumerId,currentMeter?.id);notify(isEdit?'Meter updated.':'Meter registered.')}else if(modal.type==='reading'){if(!readingMeter||reading===''||Number(reading)<0)throw new Error('Choose a meter and enter a non-negative reading.');await api.recordMeterReading(readingMeter,Number(reading),new Date(readingDate).toISOString());notify('Meter reading recorded.')}else if(modal.type==='service'){if(!serviceTech||!serviceConsumer||!serviceMeter||!serviceSummary.trim())throw new Error('Choose a technician, consumer, meter, and describe the work.');await api.serviceRecord({technicianId:serviceTech,consumerId:serviceConsumer,meterId:serviceMeter,summary:serviceSummary,priority:servicePriority,scheduledFor:new Date(serviceDate).toISOString()});notify('Service visit scheduled.')}else if(modal.type==='technician'){if(!name.trim())throw new Error('Technician name is required.');await api.technician(name,zone,email,phone,currentTechnician?.id);notify(isEdit?'Technician updated.':'Technician added to the field team.')}else if(modal.type==='bill'){const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1),end=new Date(now.getFullYear(),now.getMonth()+1,0),due=new Date(now.getFullYear(),now.getMonth()+1,14),iso=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const count=await api.generateBills(iso(start),iso(end),iso(due));if(!count)throw new Error('No active consumers with meter readings were found for this period.');notify(`${count} bills generated from recorded meter readings.`)}await refresh();close()}catch(err){setError(err instanceof Error?err.message:'The change could not be saved.')}finally{setSaving(false)}}
+  const submit=async(e:React.FormEvent)=>{
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+    try{
+      if(modal.type==='consumer'){
+        if(!name.trim()) throw new Error('Full name is required.');
+        const cleanAccount = account.trim().toUpperCase() || `GF-${Math.floor(2000 + Math.random() * 8000)}`;
+        const cleanAddress = address.trim() || `${zone || 'North End'}, Sector 4`;
+        await api.consumer({name:name.trim(),account:cleanAccount,address:cleanAddress,zone,plan,status:status as Consumer['status'],email:email.trim()||undefined,phone:phone.trim()||undefined},current?.id);
+        notify(isEdit?'Consumer updated successfully.':'Consumer created successfully.')
+      }else if(modal.type==='meter'){
+        const cleanSerial = meterSerial.trim() || `MT-${Math.floor(10000 + Math.random() * 90000)}`;
+        const effectiveConsumerId = consumerId || currentMeter?.consumerId || consumers[0]?.id;
+        if(!effectiveConsumerId) throw new Error('Please create an active consumer before registering a meter.');
+        await api.meter(cleanSerial,effectiveConsumerId,currentMeter?.id);
+        notify(isEdit?'Meter updated.':'Meter registered.')
+      }else if(modal.type==='reading'){
+        const effectiveMeterId = readingMeter || meters[0]?.id;
+        if(!effectiveMeterId||reading===''||Number(reading)<0) throw new Error('Choose a meter and enter a valid non-negative reading.');
+        await api.recordMeterReading(effectiveMeterId,Number(reading),new Date(readingDate).toISOString());
+        notify('Meter reading recorded.')
+      }else if(modal.type==='service'){
+        const effectiveTech = serviceTech || technicians[0]?.id;
+        const effectiveConsumer = serviceConsumer || consumers[0]?.id;
+        const effectiveMeter = serviceMeter || meters[0]?.id;
+        if(!effectiveTech||!effectiveConsumer||!effectiveMeter||!serviceSummary.trim()) throw new Error('Choose a technician, consumer, meter, and describe the work.');
+        await api.serviceRecord({technicianId:effectiveTech,consumerId:effectiveConsumer,meterId:effectiveMeter,summary:serviceSummary.trim(),priority:servicePriority,scheduledFor:new Date(serviceDate).toISOString()});
+        notify('Service visit scheduled.')
+      }else if(modal.type==='technician'){
+        if(!name.trim()) throw new Error('Technician name is required.');
+        await api.technician(name.trim(),zone,email.trim(),phone.trim(),currentTechnician?.id);
+        notify(isEdit?'Technician updated.':'Technician added to the field team.')
+      }else if(modal.type==='bill'){
+        const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1),end=new Date(now.getFullYear(),now.getMonth()+1,0),due=new Date(now.getFullYear(),now.getMonth()+1,14),iso=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const count=await api.generateBills(iso(start),iso(end),iso(due));
+        if(!count) throw new Error('No active consumers with meter readings were found for this period.');
+        notify(`${count} bills generated from recorded meter readings.`)
+      }
+      await refresh();
+      close()
+    }catch(err){
+      setError(err instanceof Error?err.message:'The change could not be saved.')
+    }finally{
+      setSaving(false)
+    }
+  }
  const del=async()=>{try{if(modal.id){if(modal.type==='delete'){if(blockers.length>0)throw new Error(`Cannot delete consumer with historical records (${blockers.join(', ')}). Deactivate the consumer instead.`);await api.deleteConsumer(modal.id)}if(modal.type==='meter')await api.deleteMeter(modal.id);if(modal.type==='technician')await api.deleteTechnician(modal.id)}await refresh();notify('Record deleted.');close()}catch(err){setError(err instanceof Error?err.message:'The record could not be deleted.')}}
  const deactivate=async()=>{if(!current?.id)return;setSaving(true);try{await api.setConsumerStatus(current.id,'inactive');await refresh();notify(`${current.name} marked as Inactive.`);close()}catch(err){setError(err instanceof Error?err.message:'Could not deactivate consumer.')}finally{setSaving(false)}}
 
