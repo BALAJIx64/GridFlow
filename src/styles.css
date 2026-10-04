@@ -586,4 +586,77 @@
   background: #fef2f2 !important;
 }
 
+/* SREC Database Sandbox UI */
+.sandbox-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+  padding: 4px 12px 4px 10px;
+  margin-right: 8px;
+}
+.sandbox-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+.sandbox-badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.sandbox-badge-text b {
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+}
+.sandbox-badge-text small {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.reset-sandbox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.reset-sandbox-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+.sandbox-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.07), rgba(16, 185, 129, 0.07));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.sandbox-info-banner svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+
 
