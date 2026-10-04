@@ -211,10 +211,14 @@ insert into public.zones (name, description, is_active) values
 on conflict (name) do nothing;
 
 -- 6. Seed Default Electricity Tariffs (INR Currency)
-insert into public.tariffs (name, category, rate_per_kwh, fixed_charge, currency, is_active) values
+insert into public.tariffs (name, category, rate_per_kwh, fixed_charge, currency, is_active)
+select v.name, v.category, v.rate_per_kwh, v.fixed_charge, v.currency, v.is_active
+from (values
   ('Residential Standard', 'residential', 6.5000, 120.00, 'INR', true),
   ('Business General', 'business', 9.2000, 250.00, 'INR', true),
   ('Commercial High-Tension', 'commercial', 12.8000, 500.00, 'INR', true)
+) as v(name, category, rate_per_kwh, fixed_charge, currency, is_active)
+where not exists (select 1 from public.tariffs t where t.category = v.category and t.is_active)
 on conflict (name) do nothing;
 
 -- 7. Ensure consumers status check includes active and inactive
@@ -227,11 +231,13 @@ end $$;
 alter table public.consumers add constraint consumers_status_check check (status in ('active','inactive','pending','suspended'));
 
 -- 8. Core Helper Functions (Security Definer to prevent 42501 permission denied errors)
+drop function if exists public.is_gridflow_admin() cascade;
 create or replace function public.is_gridflow_admin()
 returns boolean language sql stable security definer set search_path = 'public' as $$
   select true;
 $$;
 
+drop function if exists public.mark_overdue_bills() cascade;
 create or replace function public.mark_overdue_bills()
 returns integer language plpgsql security definer set search_path = 'public' as $$
 declare n integer;
@@ -241,6 +247,7 @@ begin
   return n;
 end $$;
 
+drop function if exists public.record_manual_payment(uuid) cascade;
 create or replace function public.record_manual_payment(p_bill_id uuid)
 returns void language plpgsql security definer set search_path = 'public' as $$
 declare bill_row record;
@@ -252,7 +259,8 @@ begin
   update public.bills set status='paid', paid_at=now() where id=bill_row.id;
 end $$;
 
-create or replace function public.generate_bills(p_from date, p_to date, p_due date)
+drop function if exists public.generate_bills(date, date, date) cascade;
+create or replace function public.generate_bills(p_period_start date, p_period_end date, p_due_date date)
 returns integer language plpgsql security definer set search_path = 'public' as $$
 declare
   c record; count_created integer := 0; bill_num text;
@@ -267,16 +275,17 @@ begin
     usage_val := coalesce(meter_row.latest_reading, c.usage_kwh, 150.0);
     energy_chg := round(usage_val * rate_val, 2);
     total_val := energy_chg + coalesce(fix_val, 0);
-    bill_num := 'INV-' || to_char(p_to, 'YYYYMM') || '-' || upper(substr(md5(random()::text), 1, 6));
+    bill_num := 'INV-' || to_char(p_period_end, 'YYYYMM') || '-' || upper(substr(md5(random()::text), 1, 6));
 
     insert into public.bills (bill_number, consumer_id, period_start, period_end, due_date, usage_kwh, energy_charge, fixed_charge, total_amount, currency, status)
-    values (bill_num, c.id, p_from, p_to, p_due, usage_val, energy_chg, fix_val, total_val, 'INR', 'pending')
+    values (bill_num, c.id, p_period_start, p_period_end, p_due_date, usage_val, energy_chg, fix_val, total_val, 'INR', 'pending')
     on conflict (consumer_id, period_start, period_end) do nothing;
     count_created := count_created + 1;
   end loop;
   return count_created;
 end $$;
 
+drop function if exists public.get_report_analytics(date, date) cascade;
 create or replace function public.get_report_analytics(p_from date default null, p_to date default null)
 returns jsonb language plpgsql stable security definer set search_path = 'public' as $$
 begin
@@ -288,6 +297,7 @@ begin
   );
 end $$;
 
+drop function if exists public.db_explorer_tables() cascade;
 create or replace function public.db_explorer_tables()
 returns jsonb language sql stable security definer set search_path = 'public' as $$
   select coalesce(jsonb_agg(jsonb_build_object('table', t,
@@ -295,6 +305,7 @@ returns jsonb language sql stable security definer set search_path = 'public' as
   from unnest(array['activity_logs','bills','consumers','db_operation_logs','meter_readings','meters','notifications','payments','service_records','system_settings','tariffs','technicians','user_profiles','zones']) t;
 $$;
 
+drop function if exists public.db_explorer_rows(text, integer, integer, text, boolean, text) cascade;
 create or replace function public.db_explorer_rows(p_table text, p_limit integer default 10, p_offset integer default 0, p_order text default null, p_desc boolean default false, p_search text default null)
 returns jsonb language plpgsql stable security definer set search_path = 'public' as $$
 declare cols jsonb; total bigint; result jsonb; ord text := ''; flt text := '';
@@ -314,15 +325,17 @@ begin
   return jsonb_build_object('total', total, 'columns', coalesce(cols, '[]'::jsonb), 'rows', result);
 end $$;
 
+drop function if exists public.report_consumption_by_zone() cascade;
 create or replace function public.report_consumption_by_zone()
 returns jsonb language sql stable security definer set search_path = 'public' as $$
   select coalesce(jsonb_agg(r), '[]'::jsonb) from (
     select coalesce(c.zone, 'Unassigned') as zone, count(distinct c.id) as consumers,
-           count(b.id) as bills, coalesce(sum(b.usage_kwh), 0) as total_kwh, coalesce(sum(b.total_amount), 0) as billed_inr
+            count(b.id) as bills, coalesce(sum(b.usage_kwh), 0) as total_kwh, coalesce(sum(b.total_amount), 0) as billed_inr
     from public.consumers c left join public.bills b on b.consumer_id = c.id
     group by 1 order by billed_inr desc) r;
 $$;
 
+drop function if exists public.report_top_consumers(integer) cascade;
 create or replace function public.report_top_consumers(p_limit integer default 10)
 returns jsonb language sql stable security definer set search_path = 'public' as $$
   select coalesce(jsonb_agg(r), '[]'::jsonb) from (
@@ -331,18 +344,20 @@ returns jsonb language sql stable security definer set search_path = 'public' as
     group by c.id order by total_kwh desc limit greatest(1, least(p_limit, 100))) r;
 $$;
 
+drop function if exists public.report_revenue_by_tariff() cascade;
 create or replace function public.report_revenue_by_tariff()
 returns jsonb language sql stable security definer set search_path = 'public' as $$
   select coalesce(jsonb_agg(r), '[]'::jsonb) from (
     select t.name as tariff, t.category, count(b.id) as bills,
-           coalesce(sum(b.total_amount), 0) as billed_inr,
-           coalesce(sum(b.total_amount) filter (where b.status = 'paid'), 0) as collected_inr
+            coalesce(sum(b.total_amount), 0) as billed_inr,
+            coalesce(sum(b.total_amount) filter (where b.status = 'paid'), 0) as collected_inr
     from public.tariffs t
     left join public.consumers c on c.tariff_id = t.id
     left join public.bills b on b.consumer_id = c.id
     group by t.id order by billed_inr desc) r;
 $$;
 
+drop function if exists public.report_table_counts() cascade;
 create or replace function public.report_table_counts()
 returns jsonb language sql stable security definer set search_path = 'public' as $$
   select jsonb_build_array(

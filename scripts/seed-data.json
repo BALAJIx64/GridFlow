@@ -1,0 +1,1045 @@
+{
+  "consumers": [
+    {
+      "id": "c0000001-0000-0000-0000-000000000001",
+      "name": "Karthikeyan Ramaswamy",
+      "account": "GF-TN-1001",
+      "address": "14, Usman Road, T. Nagar, Chennai",
+      "zone": "Chennai Central",
+      "plan": "Residential",
+      "usage": 345,
+      "status": "Active",
+      "email": "karthikeyan.ramaswamy@grid",
+      "phone": "+91 98401 23451"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000002",
+      "name": "Priya Natarajan",
+      "account": "GF-TN-1002",
+      "address": "45, DB Road, RS Puram, Coimbatore",
+      "zone": "Coimbatore Urban",
+      "plan": "Residential",
+      "usage": 412,
+      "status": "Active",
+      "email": "priya.natarajan@grid",
+      "phone": "+91 94432 87652"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000003",
+      "name": "Senthilkumar Balan",
+      "account": "GF-TN-1003",
+      "address": "88, 80 Feet Road, KK Nagar, Madurai",
+      "zone": "Madurai Metro",
+      "plan": "Business",
+      "usage": 890,
+      "status": "Active",
+      "email": "senthilkumar.balan@grid",
+      "phone": "+91 98410 34563"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000004",
+      "name": "Vijayalakshmi Subramanian",
+      "account": "GF-TN-1004",
+      "address": "22, Shastri Road, Thillai Nagar, Trichy",
+      "zone": "Tiruchirappalli Central",
+      "plan": "Residential",
+      "usage": 280,
+      "status": "Active",
+      "email": "vijayalakshmi.subramanian@grid",
+      "phone": "+91 97890 12344"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000005",
+      "name": "Anirudh Sundaram",
+      "account": "GF-TN-1005",
+      "address": "71, Saradha College Road, Fairlands, Salem",
+      "zone": "Salem Metro",
+      "plan": "Commercial",
+      "usage": 1420,
+      "status": "Active",
+      "email": "anirudh.sundaram@grid",
+      "phone": "+91 99402 76545"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000006",
+      "name": "Kavitha Meenakshi",
+      "account": "GF-TN-1006",
+      "address": "5, 2nd Avenue, Anna Nagar, Chennai",
+      "zone": "Chennai Central",
+      "plan": "Residential",
+      "usage": 530,
+      "status": "Active",
+      "email": "kavitha.meenakshi@grid",
+      "phone": "+91 98421 87656"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000007",
+      "name": "Saravanan Murugesan",
+      "account": "GF-TN-1007",
+      "address": "102, Cross Cut Road, Gandhipuram, Coimbatore",
+      "zone": "Coimbatore Urban",
+      "plan": "Business",
+      "usage": 760,
+      "status": "Active",
+      "email": "saravanan.murugesan@grid",
+      "phone": "+91 94420 54327"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000008",
+      "name": "Divya Balakrishnan",
+      "account": "GF-TN-1008",
+      "address": "33, West Tower Street, Simmakkal, Madurai",
+      "zone": "Madurai Metro",
+      "plan": "Residential",
+      "usage": 315,
+      "status": "Active",
+      "email": "divya.balakrishnan@grid",
+      "phone": "+91 98940 32108"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000009",
+      "name": "Muthukumar Pandian",
+      "account": "GF-TN-1009",
+      "address": "19, Salai Road, Woraiyur, Trichy",
+      "zone": "Tiruchirappalli Central",
+      "plan": "Commercial",
+      "usage": 1150,
+      "status": "Active",
+      "email": "muthukumar.pandian@grid",
+      "phone": "+91 97500 45679"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000010",
+      "name": "Aishwarya Rajendran",
+      "account": "GF-TN-1010",
+      "address": "40, Cherry Road, Hasthampatti, Salem",
+      "zone": "Salem Metro",
+      "plan": "Residential",
+      "usage": 290,
+      "status": "Active",
+      "email": "aishwarya.rajendran@grid",
+      "phone": "+91 94435 98710"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000011",
+      "name": "Vignesh Kumar",
+      "account": "GF-TN-1011",
+      "address": "12, Luz Church Road, Mylapore, Chennai",
+      "zone": "Chennai Central",
+      "plan": "Residential",
+      "usage": 460,
+      "status": "Active",
+      "email": "vignesh.kumar@grid",
+      "phone": "+91 98403 65411"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000012",
+      "name": "Deepa Shankaran",
+      "account": "GF-TN-1012",
+      "address": "56, Avinashi Road, Peelamedu, Coimbatore",
+      "zone": "Coimbatore Urban",
+      "plan": "Commercial",
+      "usage": 1380,
+      "status": "Active",
+      "email": "deepa.shankaran@grid",
+      "phone": "+91 94421 12312"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000013",
+      "name": "Suresh Kannan",
+      "account": "GF-TN-1013",
+      "address": "77, Vakkil New Street, Simmakkal, Madurai",
+      "zone": "Madurai Metro",
+      "plan": "Business",
+      "usage": 690,
+      "status": "Active",
+      "email": "suresh.kannan@grid",
+      "phone": "+91 98412 87613"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000014",
+      "name": "Meenakshi Sundaram",
+      "account": "GF-TN-1014",
+      "address": "28, Reynolds Road, Cantonment, Trichy",
+      "zone": "Tiruchirappalli Central",
+      "plan": "Residential",
+      "usage": 310,
+      "status": "Active",
+      "email": "meenakshi.sundaram@grid",
+      "phone": "+91 97900 34514"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000015",
+      "name": "Jayanthi Krishnan",
+      "account": "GF-TN-1015",
+      "address": "18, Meyyanur Main Road, Salem",
+      "zone": "Salem Metro",
+      "plan": "Residential",
+      "usage": 240,
+      "status": "Active",
+      "email": "jayanthi.krishnan@grid",
+      "phone": "+91 99420 78915"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000016",
+      "name": "Gokulnath Raja",
+      "account": "GF-TN-1016",
+      "address": "9, LB Road, Adyar, Chennai",
+      "zone": "Chennai Central",
+      "plan": "Commercial",
+      "usage": 1520,
+      "status": "Active",
+      "email": "gokulnath.raja@grid",
+      "phone": "+91 98408 43216"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000017",
+      "name": "Nithya Kalyani",
+      "account": "GF-TN-1017",
+      "address": "63, NSR Road, Saibaba Colony, Coimbatore",
+      "zone": "Coimbatore Urban",
+      "plan": "Residential",
+      "usage": 375,
+      "status": "Active",
+      "email": "nithya.kalyani@grid",
+      "phone": "+91 94438 65417"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000018",
+      "name": "Venkatesh Prabhu",
+      "account": "GF-TN-1018",
+      "address": "11, Lake View Road, Mattuthavani, Madurai",
+      "zone": "Madurai Metro",
+      "plan": "Residential",
+      "usage": 420,
+      "status": "Active",
+      "email": "venkatesh.prabhu@grid",
+      "phone": "+91 98419 87618"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000019",
+      "name": "Radhika Srinivasan",
+      "account": "GF-TN-1019",
+      "address": "84, EVR Road, Puthur, Trichy",
+      "zone": "Tiruchirappalli Central",
+      "plan": "Business",
+      "usage": 810,
+      "status": "Active",
+      "email": "radhika.srinivasan@grid",
+      "phone": "+91 97899 23419"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000020",
+      "name": "Manikandan Selvam",
+      "account": "GF-TN-1020",
+      "address": "31, Omalur Main Road, Alagapuram, Salem",
+      "zone": "Salem Metro",
+      "plan": "Commercial",
+      "usage": 1650,
+      "status": "Active",
+      "email": "manikandan.selvam@grid",
+      "phone": "+91 99405 67820"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000021",
+      "name": "Abinaya Ramesh",
+      "account": "GF-TN-1021",
+      "address": "4, 100 Feet Bypass Road, Velachery, Chennai",
+      "zone": "Chennai Central",
+      "plan": "Residential",
+      "usage": 490,
+      "status": "Active",
+      "email": "abinaya.ramesh@grid",
+      "phone": "+91 98406 54321"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000022",
+      "name": "Prakash Soundararajan",
+      "account": "GF-TN-1022",
+      "address": "90, Trichy Road, Singanallur, Coimbatore",
+      "zone": "Coimbatore Urban",
+      "plan": "Business",
+      "usage": 920,
+      "status": "Active",
+      "email": "prakash.soundararajan@grid",
+      "phone": "+91 94429 87622"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000023",
+      "name": "Swetha Narayanan",
+      "account": "GF-TN-1023",
+      "address": "27, Melur Main Road, K.Pudur, Madurai",
+      "zone": "Madurai Metro",
+      "plan": "Residential",
+      "usage": 330,
+      "status": "Active",
+      "email": "swetha.narayanan@grid",
+      "phone": "+91 98944 12323"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000024",
+      "name": "Dinesh Chandrasekar",
+      "account": "GF-TN-1024",
+      "address": "15, South Chitra Street, Srirangam, Trichy",
+      "zone": "Tiruchirappalli Central",
+      "plan": "Residential",
+      "usage": 270,
+      "status": "Active",
+      "email": "dinesh.chandrasekar@grid",
+      "phone": "+91 97509 45624"
+    },
+    {
+      "id": "c0000001-0000-0000-0000-000000000025",
+      "name": "Revathi Govindaraj",
+      "account": "GF-TN-1025",
+      "address": "52, Gugai Main Road, Salem",
+      "zone": "Salem Metro",
+      "plan": "Residential",
+      "usage": 180,
+      "status": "Inactive",
+      "email": "revathi.govindaraj@grid",
+      "phone": "+91 94430 98725"
+    }
+  ],
+  "meters": [
+    {
+      "id": "m0000001-0000-0000-0000-000000000001",
+      "serial": "MT-TN-4001",
+      "consumer": "Karthikeyan Ramaswamy",
+      "consumerId": "c0000001-0000-0000-0000-000000000001",
+      "zone": "Chennai Central",
+      "reading": 345,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000002",
+      "serial": "MT-TN-4002",
+      "consumer": "Priya Natarajan",
+      "consumerId": "c0000001-0000-0000-0000-000000000002",
+      "zone": "Coimbatore Urban",
+      "reading": 412,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000003",
+      "serial": "MT-TN-4003",
+      "consumer": "Senthilkumar Balan",
+      "consumerId": "c0000001-0000-0000-0000-000000000003",
+      "zone": "Madurai Metro",
+      "reading": 890,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000004",
+      "serial": "MT-TN-4004",
+      "consumer": "Vijayalakshmi Subramanian",
+      "consumerId": "c0000001-0000-0000-0000-000000000004",
+      "zone": "Tiruchirappalli Central",
+      "reading": 280,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000005",
+      "serial": "MT-TN-4005",
+      "consumer": "Anirudh Sundaram",
+      "consumerId": "c0000001-0000-0000-0000-000000000005",
+      "zone": "Salem Metro",
+      "reading": 1420,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000006",
+      "serial": "MT-TN-4006",
+      "consumer": "Kavitha Meenakshi",
+      "consumerId": "c0000001-0000-0000-0000-000000000006",
+      "zone": "Chennai Central",
+      "reading": 530,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000007",
+      "serial": "MT-TN-4007",
+      "consumer": "Saravanan Murugesan",
+      "consumerId": "c0000001-0000-0000-0000-000000000007",
+      "zone": "Coimbatore Urban",
+      "reading": 760,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000008",
+      "serial": "MT-TN-4008",
+      "consumer": "Divya Balakrishnan",
+      "consumerId": "c0000001-0000-0000-0000-000000000008",
+      "zone": "Madurai Metro",
+      "reading": 315,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000009",
+      "serial": "MT-TN-4009",
+      "consumer": "Muthukumar Pandian",
+      "consumerId": "c0000001-0000-0000-0000-000000000009",
+      "zone": "Tiruchirappalli Central",
+      "reading": 1150,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000010",
+      "serial": "MT-TN-4010",
+      "consumer": "Aishwarya Rajendran",
+      "consumerId": "c0000001-0000-0000-0000-000000000010",
+      "zone": "Salem Metro",
+      "reading": 290,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000011",
+      "serial": "MT-TN-4011",
+      "consumer": "Vignesh Kumar",
+      "consumerId": "c0000001-0000-0000-0000-000000000011",
+      "zone": "Chennai Central",
+      "reading": 460,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000012",
+      "serial": "MT-TN-4012",
+      "consumer": "Deepa Shankaran",
+      "consumerId": "c0000001-0000-0000-0000-000000000012",
+      "zone": "Coimbatore Urban",
+      "reading": 1380,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000013",
+      "serial": "MT-TN-4013",
+      "consumer": "Suresh Kannan",
+      "consumerId": "c0000001-0000-0000-0000-000000000013",
+      "zone": "Madurai Metro",
+      "reading": 690,
+      "status": "Offline",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000014",
+      "serial": "MT-TN-4014",
+      "consumer": "Meenakshi Sundaram",
+      "consumerId": "c0000001-0000-0000-0000-000000000014",
+      "zone": "Tiruchirappalli Central",
+      "reading": 310,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000015",
+      "serial": "MT-TN-4015",
+      "consumer": "Jayanthi Krishnan",
+      "consumerId": "c0000001-0000-0000-0000-000000000015",
+      "zone": "Salem Metro",
+      "reading": 240,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000016",
+      "serial": "MT-TN-4016",
+      "consumer": "Gokulnath Raja",
+      "consumerId": "c0000001-0000-0000-0000-000000000016",
+      "zone": "Chennai Central",
+      "reading": 1520,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000017",
+      "serial": "MT-TN-4017",
+      "consumer": "Nithya Kalyani",
+      "consumerId": "c0000001-0000-0000-0000-000000000017",
+      "zone": "Coimbatore Urban",
+      "reading": 375,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000018",
+      "serial": "MT-TN-4018",
+      "consumer": "Venkatesh Prabhu",
+      "consumerId": "c0000001-0000-0000-0000-000000000018",
+      "zone": "Madurai Metro",
+      "reading": 420,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000019",
+      "serial": "MT-TN-4019",
+      "consumer": "Radhika Srinivasan",
+      "consumerId": "c0000001-0000-0000-0000-000000000019",
+      "zone": "Tiruchirappalli Central",
+      "reading": 810,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000020",
+      "serial": "MT-TN-4020",
+      "consumer": "Manikandan Selvam",
+      "consumerId": "c0000001-0000-0000-0000-000000000020",
+      "zone": "Salem Metro",
+      "reading": 1650,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000021",
+      "serial": "MT-TN-4021",
+      "consumer": "Abinaya Ramesh",
+      "consumerId": "c0000001-0000-0000-0000-000000000021",
+      "zone": "Chennai Central",
+      "reading": 490,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000022",
+      "serial": "MT-TN-4022",
+      "consumer": "Prakash Soundararajan",
+      "consumerId": "c0000001-0000-0000-0000-000000000022",
+      "zone": "Coimbatore Urban",
+      "reading": 920,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000023",
+      "serial": "MT-TN-4023",
+      "consumer": "Swetha Narayanan",
+      "consumerId": "c0000001-0000-0000-0000-000000000023",
+      "zone": "Madurai Metro",
+      "reading": 330,
+      "status": "Online",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000024",
+      "serial": "MT-TN-4024",
+      "consumer": "Dinesh Chandrasekar",
+      "consumerId": "c0000001-0000-0000-0000-000000000024",
+      "zone": "Tiruchirappalli Central",
+      "reading": 270,
+      "status": "Offline",
+      "signal": 95
+    },
+    {
+      "id": "m0000001-0000-0000-0000-000000000025",
+      "serial": "MT-TN-4025",
+      "consumer": "Revathi Govindaraj",
+      "consumerId": "c0000001-0000-0000-0000-000000000025",
+      "zone": "Salem Metro",
+      "reading": 180,
+      "status": "Online",
+      "signal": 95
+    }
+  ],
+  "bills": [
+    {
+      "id": "INV-202610-01",
+      "dbId": "b0000001-0000-0000-0000-000000000001",
+      "consumer": "Karthikeyan Ramaswamy",
+      "account": "GF-TN-1001",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1998,
+      "usage": 345,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-02",
+      "dbId": "b0000001-0000-0000-0000-000000000002",
+      "consumer": "Priya Natarajan",
+      "account": "GF-TN-1002",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 2366,
+      "usage": 412,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-03",
+      "dbId": "b0000001-0000-0000-0000-000000000003",
+      "consumer": "Senthilkumar Balan",
+      "account": "GF-TN-1003",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 8038,
+      "usage": 890,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-04",
+      "dbId": "b0000001-0000-0000-0000-000000000004",
+      "consumer": "Vijayalakshmi Subramanian",
+      "account": "GF-TN-1004",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1640,
+      "usage": 280,
+      "status": "Pending"
+    },
+    {
+      "id": "INV-202610-05",
+      "dbId": "b0000001-0000-0000-0000-000000000005",
+      "consumer": "Anirudh Sundaram",
+      "account": "GF-TN-1005",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 16830,
+      "usage": 1420,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-06",
+      "dbId": "b0000001-0000-0000-0000-000000000006",
+      "consumer": "Kavitha Meenakshi",
+      "account": "GF-TN-1006",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 3015,
+      "usage": 530,
+      "status": "Pending"
+    },
+    {
+      "id": "INV-202610-07",
+      "dbId": "b0000001-0000-0000-0000-000000000007",
+      "consumer": "Saravanan Murugesan",
+      "account": "GF-TN-1007",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 6900,
+      "usage": 760,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-08",
+      "dbId": "b0000001-0000-0000-0000-000000000008",
+      "consumer": "Divya Balakrishnan",
+      "account": "GF-TN-1008",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1833,
+      "usage": 315,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-09",
+      "dbId": "b0000001-0000-0000-0000-000000000009",
+      "consumer": "Muthukumar Pandian",
+      "account": "GF-TN-1009",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 13725,
+      "usage": 1150,
+      "status": "Overdue"
+    },
+    {
+      "id": "INV-202610-10",
+      "dbId": "b0000001-0000-0000-0000-000000000010",
+      "consumer": "Aishwarya Rajendran",
+      "account": "GF-TN-1010",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1695,
+      "usage": 290,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-11",
+      "dbId": "b0000001-0000-0000-0000-000000000011",
+      "consumer": "Vignesh Kumar",
+      "account": "GF-TN-1011",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 2630,
+      "usage": 460,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-12",
+      "dbId": "b0000001-0000-0000-0000-000000000012",
+      "consumer": "Deepa Shankaran",
+      "account": "GF-TN-1012",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 16370,
+      "usage": 1380,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-13",
+      "dbId": "b0000001-0000-0000-0000-000000000013",
+      "consumer": "Suresh Kannan",
+      "account": "GF-TN-1013",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 6288,
+      "usage": 690,
+      "status": "Pending"
+    },
+    {
+      "id": "INV-202610-14",
+      "dbId": "b0000001-0000-0000-0000-000000000014",
+      "consumer": "Meenakshi Sundaram",
+      "account": "GF-TN-1014",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1805,
+      "usage": 310,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-15",
+      "dbId": "b0000001-0000-0000-0000-000000000015",
+      "consumer": "Jayanthi Krishnan",
+      "account": "GF-TN-1015",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1420,
+      "usage": 240,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-16",
+      "dbId": "b0000001-0000-0000-0000-000000000016",
+      "consumer": "Gokulnath Raja",
+      "account": "GF-TN-1016",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 17980,
+      "usage": 1520,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-17",
+      "dbId": "b0000001-0000-0000-0000-000000000017",
+      "consumer": "Nithya Kalyani",
+      "account": "GF-TN-1017",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 2163,
+      "usage": 375,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-18",
+      "dbId": "b0000001-0000-0000-0000-000000000018",
+      "consumer": "Venkatesh Prabhu",
+      "account": "GF-TN-1018",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 2410,
+      "usage": 420,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-19",
+      "dbId": "b0000001-0000-0000-0000-000000000019",
+      "consumer": "Radhika Srinivasan",
+      "account": "GF-TN-1019",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 7338,
+      "usage": 810,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-20",
+      "dbId": "b0000001-0000-0000-0000-000000000020",
+      "consumer": "Manikandan Selvam",
+      "account": "GF-TN-1020",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 19475,
+      "usage": 1650,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-21",
+      "dbId": "b0000001-0000-0000-0000-000000000021",
+      "consumer": "Abinaya Ramesh",
+      "account": "GF-TN-1021",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 2795,
+      "usage": 490,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-22",
+      "dbId": "b0000001-0000-0000-0000-000000000022",
+      "consumer": "Prakash Soundararajan",
+      "account": "GF-TN-1022",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 8300,
+      "usage": 920,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-23",
+      "dbId": "b0000001-0000-0000-0000-000000000023",
+      "consumer": "Swetha Narayanan",
+      "account": "GF-TN-1023",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1915,
+      "usage": 330,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-24",
+      "dbId": "b0000001-0000-0000-0000-000000000024",
+      "consumer": "Dinesh Chandrasekar",
+      "account": "GF-TN-1024",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1585,
+      "usage": 270,
+      "status": "Paid"
+    },
+    {
+      "id": "INV-202610-25",
+      "dbId": "b0000001-0000-0000-0000-000000000025",
+      "consumer": "Revathi Govindaraj",
+      "account": "GF-TN-1025",
+      "period": "September 2026",
+      "due": "14 Oct 2026",
+      "amount": 1090,
+      "usage": 180,
+      "status": "Paid"
+    }
+  ],
+  "technicians": [
+    {
+      "id": "t0000001-0000-0000-0000-000000000001",
+      "name": "Murugan Palanisamy",
+      "initials": "MP",
+      "zone": "Chennai Central",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000002",
+      "name": "Vigneshwaran Arumugam",
+      "initials": "VA",
+      "zone": "Chennai Central",
+      "jobs": 2,
+      "status": "On site"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000003",
+      "name": "Manikandan Velu",
+      "initials": "MV",
+      "zone": "Chennai Central",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000004",
+      "name": "Dinesh Selvaraj",
+      "initials": "DS",
+      "zone": "Coimbatore Urban",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000005",
+      "name": "Rajkumar Karuppasamy",
+      "initials": "RK",
+      "zone": "Coimbatore Urban",
+      "jobs": 2,
+      "status": "On site"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000006",
+      "name": "Balasubramanian Thangaraj",
+      "initials": "BT",
+      "zone": "Coimbatore Urban",
+      "jobs": 0,
+      "status": "Off duty"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000007",
+      "name": "Sridhar Govindasamy",
+      "initials": "SG",
+      "zone": "Madurai Metro",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000008",
+      "name": "Aravindhan Kalimuthu",
+      "initials": "AK",
+      "zone": "Madurai Metro",
+      "jobs": 2,
+      "status": "On site"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000009",
+      "name": "Kalaiarasan Chinnasamy",
+      "initials": "KC",
+      "zone": "Madurai Metro",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000010",
+      "name": "Senthil Nathan",
+      "initials": "SN",
+      "zone": "Tiruchirappalli Central",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000011",
+      "name": "Mohanraj Veerappan",
+      "initials": "MV",
+      "zone": "Tiruchirappalli Central",
+      "jobs": 2,
+      "status": "On site"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000012",
+      "name": "Ilangovan Muthusamy",
+      "initials": "IM",
+      "zone": "Tiruchirappalli Central",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000013",
+      "name": "Thamizhchelvan Marimuthu",
+      "initials": "TM",
+      "zone": "Salem Metro",
+      "jobs": 1,
+      "status": "Available"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000014",
+      "name": "Sakthivel Periasamy",
+      "initials": "SP",
+      "zone": "Salem Metro",
+      "jobs": 2,
+      "status": "On site"
+    },
+    {
+      "id": "t0000001-0000-0000-0000-000000000015",
+      "name": "Sivakumar Natarajan",
+      "initials": "SN",
+      "zone": "Salem Metro",
+      "jobs": 0,
+      "status": "Off duty"
+    }
+  ],
+  "zones": [
+    {
+      "id": "11111111-0000-0000-0000-000000000001",
+      "name": "Chennai Central",
+      "description": "Chennai Metro Distribution Circle (T. Nagar, Anna Nagar, Mylapore)",
+      "is_active": true
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000002",
+      "name": "Coimbatore Urban",
+      "description": "Western Circle (Gandhipuram, RS Puram, Peelamedu)",
+      "is_active": true
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000003",
+      "name": "Madurai Metro",
+      "description": "Southern Heritage Circle (KK Nagar, Simmakkal, Mattuthavani)",
+      "is_active": true
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000004",
+      "name": "Tiruchirappalli Central",
+      "description": "Delta Region Circle (Thillai Nagar, Cantonment, Srirangam)",
+      "is_active": true
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000005",
+      "name": "Salem Metro",
+      "description": "Steel City Circle (Fairlands, Hasthampatti, Alagapuram)",
+      "is_active": true
+    }
+  ],
+  "tariffs": [
+    {
+      "id": "22222222-0000-0000-0000-000000000001",
+      "name": "Residential Standard (LT-1A)",
+      "category": "residential",
+      "rate_per_kwh": 5.5,
+      "fixed_charge": 100,
+      "currency": "INR",
+      "is_active": true
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000002",
+      "name": "Business General (LT-2B)",
+      "category": "business",
+      "rate_per_kwh": 8.75,
+      "fixed_charge": 250,
+      "currency": "INR",
+      "is_active": true
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000003",
+      "name": "Commercial High-Tension (LT-3B)",
+      "category": "commercial",
+      "rate_per_kwh": 11.5,
+      "fixed_charge": 500,
+      "currency": "INR",
+      "is_active": true
+    }
+  ],
+  "serviceRecords": [
+    {
+      "id": "sr-001",
+      "summary": "Quarterly smart meter calibration and optical check",
+      "technician": "Murugan Palanisamy",
+      "consumer": "Karthikeyan Ramaswamy",
+      "meter": "MT-TN-4001",
+      "status": "Complete",
+      "scheduledAt": "02 Oct 2026"
+    },
+    {
+      "id": "sr-002",
+      "summary": "Signal drop investigation and antenna re-alignment",
+      "technician": "Rajkumar Karuppasamy",
+      "consumer": "Saravanan Murugesan",
+      "meter": "MT-TN-4007",
+      "status": "In progress",
+      "scheduledAt": "05 Oct 2026"
+    },
+    {
+      "id": "sr-003",
+      "summary": "Commercial 3-phase inspection and CT verification",
+      "technician": "Aravindhan Kalimuthu",
+      "consumer": "Anirudh Sundaram",
+      "meter": "MT-TN-4005",
+      "status": "Complete",
+      "scheduledAt": "30 Sep 2026"
+    }
+  ]
+}
