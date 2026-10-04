@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Activity, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleDollarSign, CircleHelp, ClipboardList, Clock3, CreditCard, Database, Download, Eye, EyeOff, FileBarChart, FileText, Filter, Gauge, Home, Layers3, LayoutDashboard, Leaf, Lightbulb, LockKeyhole, LogOut, MapPin, Menu, MoreHorizontal, Plus, RadioTower, RefreshCw, Search, Settings, Shield, SlidersHorizontal, Sparkles, Trash2, UserRound, Users, Wallet, Wifi, Wrench, X, Zap, type LucideIcon } from 'lucide-react'
 import { type Bill, type Consumer, type Meter, type ServiceRecord, type Technician } from './data'
-import { api, demoMode, signIn, supabase, type Analytics, type Tariff, type Zone } from './services'
+import { api, consumerSignIn, currentAdmin, currentConsumer, demoMode, signIn, signOutAll, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, supabase, type Analytics, type Tariff, type Zone } from './services'
 import { DataTable, PageToolbar, Pill, SearchControl, SectionHeading, SelectControl, StatusPill } from './components/ui'
 import { SqlToasts } from './components/SqlToasts'
 import { DatabaseConsole } from './pages/DatabaseConsole'
@@ -31,30 +31,30 @@ function IconButton({icon:I,label,onClick}:{icon:LucideIcon;label:string;onClick
 function Toasts({items,dismiss}:{items:Notice[];dismiss:(id:number)=>void}){return <div className="toast-stack" aria-live="polite">{items.map(n=><motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:8}} key={n.id} className={`toast toast-${n.kind||'success'}`}><CheckCircle2 size={17}/>{n.text}<button onClick={()=>dismiss(n.id)} aria-label="Dismiss"><X size={15}/></button></motion.div>)}</div>}
 
 export default function App(){
- const [page,setPage]=useState<Page>('Dashboard'),[dashboard,setDashboard]=useState(false),[login,setLogin]=useState(false),[menu,setMenu]=useState(false),[search,setSearch]=useState(''),[query,setQuery]=useState(''),[notices,setNotices]=useState<Notice[]>([]),[modal,setModalRaw]=useState<Modal|null>(null),[selected,setSelected]=useState<string|null>(null),[profileMenu,setProfileMenu]=useState(false),[notif,setNotif]=useState(false),[dateRange,setDateRange]=useState('Last 30 days'),[chartFilter,setChartFilter]=useState('This year'),[activityFilter,setActivityFilter]=useState(false)
+ const [page,setPage]=useState<Page>('Dashboard'),[dashboard,setDashboard]=useState<boolean>(()=>!!currentAdmin()),[login,setLogin]=useState(false),[menu,setMenu]=useState(false),[search,setSearch]=useState(''),[query,setQuery]=useState(''),[notices,setNotices]=useState<Notice[]>([]),[modal,setModalRaw]=useState<Modal|null>(null),[selected,setSelected]=useState<string|null>(null),[profileMenu,setProfileMenu]=useState(false),[notif,setNotif]=useState(false),[dateRange,setDateRange]=useState('Last 30 days'),[chartFilter,setChartFilter]=useState('This year'),[activityFilter,setActivityFilter]=useState(false)
  const reduced=useReducedMotion(),showOps=useShowOps()
- const [consumers,setConsumers]=useState<Consumer[]>([]),[meters,setMeters]=useState<Meter[]>([]),[bills,setBills]=useState<Bill[]>([]),[technicians,setTechnicians]=useState<Technician[]>([]),[serviceRecords,setServiceRecords]=useState<ServiceRecord[]>([]),[tariffs,setTariffs]=useState<Tariff[]>([]),[zones,setZones]=useState<Zone[]>([]),[profile,setProfile]=useState<Profile|null>(null),[analytics,setAnalytics]=useState<Analytics>({monthly_energy:[],monthly_collection:[],consumer_distribution:{},recent_activity:[]}),[authReady,setAuthReady]=useState(false),[busy,setBusy]=useState(false)
+ const [consumers,setConsumers]=useState<Consumer[]>([]),[meters,setMeters]=useState<Meter[]>([]),[bills,setBills]=useState<Bill[]>([]),[technicians,setTechnicians]=useState<Technician[]>([]),[serviceRecords,setServiceRecords]=useState<ServiceRecord[]>([]),[tariffs,setTariffs]=useState<Tariff[]>([]),[zones,setZones]=useState<Zone[]>([]),[profile,setProfile]=useState<Profile|null>(()=>currentAdmin()),[consumerUser,setConsumerUser]=useState<Consumer|null>(()=>currentConsumer()),[analytics,setAnalytics]=useState<Analytics>({monthly_energy:[],monthly_collection:[],consumer_distribution:{},recent_activity:[]}),[authReady,setAuthReady]=useState(false),[busy,setBusy]=useState(false)
  const notify=(text:string,kind:'success'|'error'='success')=>{const id=Date.now()+Math.random();setNotices(a=>[...a,{id,text,kind}]);window.setTimeout(()=>setNotices(a=>a.filter(n=>n.id!==id)),3800)}
- const applySession=async():Promise<boolean>=>{try{const p=await api.currentProfile();if(!p||!p.is_active){notify('Your account is awaiting approval by a super admin.','error');setProfile(null);setDashboard(false);return false}setProfile(p);setDashboard(true);setLogin(false);const target=pageFromHash();setPage(target&&(isAdmin(p.role)||!ADMIN_PAGES.includes(target))?target:'Dashboard');await api.markOverdue();void refreshData();return true}catch(e){notify(e instanceof Error?e.message:'Could not load your profile. Apply the v2 migration in Supabase.','error');setDashboard(false);return false}}
-  const refreshData=async()=>{if(!supabase)return;setBusy(true);try{const [c,m,b,t,s,tr,a,z]=await Promise.all([api.consumers(),api.meters(),api.bills(),api.technicians(),api.serviceRecords(),api.tariffs(),api.analytics(),api.zones()]);setConsumers(c);setMeters(m);setBills(b);setTechnicians(t);setServiceRecords(s);setTariffs(tr);setAnalytics(a);setZones(z)}catch(e){notify(e instanceof Error?e.message:'Could not load workspace data.','error')}finally{setBusy(false)}}
- useEffect(()=>{const client=supabase;if(!client){setAuthReady(true);return}let active=true;client.auth.getSession().then(async({data})=>{if(!active)return;if(data.session?.user){const ok=await applySession();if(!ok)await client.auth.signOut()}setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)});const {data:{subscription}}=client.auth.onAuthStateChange((_event,session)=>{if(!active)return;if(!session){setDashboard(false);setProfile(null);setConsumers([]);setMeters([]);setBills([]);setTechnicians([])}});return()=>{active=false;subscription.unsubscribe()}},[])
+ const applySession=async():Promise<boolean>=>{try{const p=await api.currentProfile();if(!p||!p.is_active){notify('Your account is awaiting approval by a super admin.','error');setProfile(null);setDashboard(false);return false}setProfile(p);setConsumerUser(null);setDashboard(true);setLogin(false);const target=pageFromHash();setPage(target&&(isAdmin(p.role)||!ADMIN_PAGES.includes(target))?target:'Dashboard');await api.markOverdue();void refreshData();return true}catch(e){notify(e instanceof Error?e.message:'Could not load your profile. Apply the v2 migration in Supabase.','error');setDashboard(false);return false}}
+ const refreshData=async()=>{if(!supabase)return;setBusy(true);try{const [c,m,b,t,s,tr,a,z]=await Promise.all([api.consumers(),api.meters(),api.bills(),api.technicians(),api.serviceRecords(),api.tariffs(),api.analytics(),api.zones()]);setConsumers(c);setMeters(m);setBills(b);setTechnicians(t);setServiceRecords(s);setTariffs(tr);setAnalytics(a);setZones(z);setConsumerUser(prev=>{if(!prev)return null;const found=c.find(item=>item.id===prev.id||item.account===prev.account);return found||prev})}catch(e){notify(e instanceof Error?e.message:'Could not load workspace data.','error')}finally{setBusy(false)}}
+ useEffect(()=>{const client=supabase;const savedAdmin=currentAdmin();const savedConsumer=currentConsumer();if(savedConsumer){setConsumerUser(savedConsumer);setDashboard(false);setLogin(false);void refreshData()}else if(savedAdmin){setProfile(savedAdmin);setDashboard(true);setLogin(false);void refreshData()}if(!client){setAuthReady(true);return}let active=true;client.auth.getSession().then(async({data})=>{if(!active)return;if(data.session?.user&&!currentConsumer()){const ok=await applySession();if(!ok)await client.auth.signOut()}setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)});const {data:{subscription}}=client.auth.onAuthStateChange((_event,session)=>{if(!active)return;if(!session&&!currentAdmin()&&!currentConsumer()){setDashboard(false);setProfile(null);setConsumerUser(null);setConsumers([]);setMeters([]);setBills([]);setTechnicians([])}});return()=>{active=false;subscription.unsubscribe()}},[])
  useEffect(()=>{if(!dashboard||!supabase)return;const channel=supabase.channel('gridflow-live-updates').on('postgres_changes',{event:'*',schema:'public'},()=>window.setTimeout(()=>void refreshData(),200)).subscribe();return()=>{void supabase?.removeChannel(channel)}},[dashboard])
  const role=profile?.role
-  const setModal=(m:Modal|null)=>{if(m&&['consumer','meter','technician','bill','delete'].includes(m.type)&&!isAdmin(role)){notify(PERMISSION_MESSAGE,'error');return}setModalRaw(m)}
-  useEffect(()=>{if(!dashboard)return;const next=`#/${pageSlug(page)}`;if(window.location.hash!==next)window.location.hash=next},[page,dashboard])
-  useEffect(()=>{const f=()=>{const p=pageFromHash();if(!p||!dashboard)return;if(ADMIN_PAGES.includes(p)&&!isAdmin(role)){notify(PERMISSION_MESSAGE,'error');setPage('Dashboard');return}setPage(p)};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[dashboard,role])
-  useEffect(()=>{if(authReady&&!dashboard&&window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search)},[authReady,dashboard])
+ const setModal=(m:Modal|null)=>{if(m&&['consumer','meter','technician','bill','delete'].includes(m.type)&&!isAdmin(role)){notify(PERMISSION_MESSAGE,'error');return}setModalRaw(m)}
+ useEffect(()=>{if(!dashboard)return;const next=`#/${pageSlug(page)}`;if(window.location.hash!==next)window.location.hash=next},[page,dashboard])
+ useEffect(()=>{const f=()=>{const p=pageFromHash();if(!p||!dashboard)return;if(ADMIN_PAGES.includes(p)&&!isAdmin(role)){notify(PERMISSION_MESSAGE,'error');setPage('Dashboard');return}setPage(p)};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[dashboard,role])
+ useEffect(()=>{if(authReady&&!dashboard&&!consumerUser&&window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search)},[authReady,dashboard,consumerUser])
  const go=(p:Page)=>{if(!supabase||!dashboard){openLogin();return}if(ADMIN_PAGES.includes(p)&&!isAdmin(role)){notify(PERMISSION_MESSAGE,'error');return}setPage(p);setDashboard(true);setLogin(false);setMenu(false);setSearch('');setSelected(null);window.scrollTo({top:0,behavior:'smooth'})}
- const openDashboard=()=>{if(!supabase||!dashboard){openLogin();return}setPage('Dashboard');setDashboard(true);setLogin(false);setMenu(false);window.scrollTo({top:0,behavior:'smooth'})}
- const openLogin=()=>{setLogin(true);setDashboard(false);window.scrollTo({top:0,behavior:'smooth'})}
+ const openDashboard=()=>{if(consumerUser)return;if(!supabase||!dashboard){openLogin();return}setPage('Dashboard');setDashboard(true);setLogin(false);setMenu(false);window.scrollTo({top:0,behavior:'smooth'})}
+ const openLogin=()=>{setLogin(true);setDashboard(false);setConsumerUser(null);window.scrollTo({top:0,behavior:'smooth'})}
  const filtered=useMemo(()=>consumers.filter(c=>`${c.name} ${c.account} ${c.address} ${c.zone} ${c.plan}`.toLowerCase().includes(query.toLowerCase())),[consumers,query])
  const active=consumers.filter(c=>c.status==='Active').length,paid=bills.filter(b=>b.status==='Paid').reduce((a,b)=>a+b.amount,0)
  return <>
-  {!authReady?<div className="login-screen" role="status">Connecting securely to GridFlow…</div>:!dashboard&&!login?<Landing openDashboard={openDashboard} openLogin={openLogin} go={go}/>:login?<Login onBack={()=>{setLogin(false);setDashboard(false)}} onSignIn={async(u,p)=>{const r=await signIn(u,p);if(r.ok&&r.profile){notify('Signed in successfully.');setProfile(r.profile);setLogin(false);setDashboard(true);const t=pageFromHash();setPage(t&&(isAdmin(r.profile.role)||!ADMIN_PAGES.includes(t))?t:'Dashboard');await api.markOverdue();void refreshData()}else notify(r.message||'Sign-in failed. Check your credentials.','error')}} demoMode={demoMode}/>:<div className="app-shell">
+  {!authReady?<div className="login-screen" role="status">Connecting securely to GridFlow…</div>:!dashboard&&!login&&!consumerUser?<Landing openDashboard={openDashboard} openLogin={openLogin} go={go}/>:login?<Login onBack={()=>{setLogin(false);setDashboard(false)}} onAdminSignIn={async(u,p)=>{const r=await signIn(u,p);if(r.ok&&r.profile){notify('Signed in as Super Administrator.');setProfile(r.profile);setConsumerUser(null);setLogin(false);setDashboard(true);const t=pageFromHash();setPage(t&&(isAdmin(r.profile.role)||!ADMIN_PAGES.includes(t))?t:'Dashboard');await api.markOverdue();void refreshData();return {ok:true}}return {ok:false,message:r.message||'Admin sign-in failed.'}}} onConsumerSignIn={async(email,acct)=>{const r=await consumerSignIn(email,acct);if(r.ok&&r.consumer){notify(`Welcome back, ${r.consumer.name}!`);setConsumerUser(r.consumer);setProfile(null);setLogin(false);setDashboard(false);void refreshData();return {ok:true}}return {ok:false,message:r.message||'Consumer sign-in failed.'}}}/>:consumerUser?<ConsumerPortal consumer={consumerUser} meters={meters} bills={bills} serviceRecords={serviceRecords} tariffs={tariffs} refresh={refreshData} notify={notify} onSignOut={async()=>{await signOutAll();setConsumerUser(null);setProfile(null);setDashboard(false);setLogin(false);notify('You have been signed out.')}}/>:<div className="app-shell">
    <aside className={`sidebar ${menu?'sidebar-open':''}`}><div className="sidebar-brand"><Brand/><button className="sidebar-collapse" aria-label="Collapse sidebar">⌃⌄</button></div><div className="workspace-switcher"><span className="workspace-mark">N</span><span className="workspace-copy"><b>GridFlow Utility</b><small>Organization</small></span><ChevronDown size={15}/></div>
     <div className="side-label">WORKSPACE</div><nav className="side-nav" aria-label="Main navigation">{(['Dashboard','Consumers','Meters','Bills','Technicians','Reports'] as Page[]).map(item=>{const I=pageIcons[item];return <button key={item} className={`side-link ${page===item?'selected':''}`} onClick={()=>go(item)}><I size={18}/><span>{item}</span>{item==='Bills'&&bills.some(x=>x.status!=='Paid')&&<span className="nav-count">{bills.filter(x=>x.status!=='Paid').length}</span>}</button>})}</nav>
     {isAdmin(role)&&<><div className="side-label side-label-tools">DATABASE</div><nav className="side-nav" aria-label="Database tools">{(['Database Console','Database Explorer'] as Page[]).map(item=>{const I=pageIcons[item];return <button key={item} className={`side-link ${page===item?'selected':''}`} onClick={()=>go(item)}><I size={18}/><span>{item}</span></button>})}</nav></>}<div className="side-label side-label-tools">PREFERENCES</div><nav className="side-nav"><button className={`side-link ${page==='Settings'?'selected':''}`} onClick={()=>go('Settings')}><Settings size={18}/><span>Settings</span></button><button className="side-link" onClick={()=>notify('Help center is ready to connect.')}><CircleHelp size={18}/><span>Help center</span></button></nav>
-    <div className="sidebar-bottom"><div className="sync-card"><div className="sync-card-top"><span className="sync-orb"><RefreshCw size={14}/></span><b>{busy?'Syncing data':'Connected to database'}</b><i className="live-dot"/></div><p>Workspace data is synced with your GridFlow database.</p><div className="sync-track"><i/></div><div className="sync-foot"><span>Last sync</span><b>{busy?'In progress':'Just now'}</b></div></div><div className="sidebar-user"><div className="avatar avatar-user">GF</div><div className="sidebar-user-copy"><b>{profile?(profile.full_name||profile.email):'Administrator'}</b><small>{profile?roleLabel[profile.role]:'GridFlow workspace'}</small></div><button className="user-more" onClick={()=>setProfileMenu(!profileMenu)} aria-label="Profile options"><MoreHorizontal size={17}/></button>{profileMenu&&<div className="profile-pop"><button onClick={()=>{setProfileMenu(false);go('Settings')}}><UserRound size={15}/> Profile settings</button><button onClick={async()=>{setProfileMenu(false);await supabase?.auth.signOut();setDashboard(false);setLogin(false);setPage('Dashboard')}}><LogOut size={15}/> Sign out</button></div>}</div></div>
+    <div className="sidebar-bottom"><div className="sync-card"><div className="sync-card-top"><span className="sync-orb"><RefreshCw size={14}/></span><b>{busy?'Syncing data':'Connected to database'}</b><i className="live-dot"/></div><p>Workspace data is synced with your GridFlow database.</p><div className="sync-track"><i/></div><div className="sync-foot"><span>Last sync</span><b>{busy?'In progress':'Just now'}</b></div></div><div className="sidebar-user"><div className="avatar avatar-user">GF</div><div className="sidebar-user-copy"><b>{profile?(profile.full_name||profile.email):'Administrator'}</b><small>{profile?roleLabel[profile.role]:'GridFlow workspace'}</small></div><button className="user-more" onClick={()=>setProfileMenu(!profileMenu)} aria-label="Profile options"><MoreHorizontal size={17}/></button>{profileMenu&&<div className="profile-pop"><button onClick={()=>{setProfileMenu(false);go('Settings')}}><UserRound size={15}/> Profile settings</button><button onClick={async()=>{setProfileMenu(false);await signOutAll();setProfile(null);setConsumerUser(null);setDashboard(false);setLogin(false);setPage('Dashboard')}}><LogOut size={15}/> Sign out</button></div>}</div></div>
    </aside>{menu&&<button className="mobile-scrim" aria-label="Close menu" onClick={()=>setMenu(false)}/>}
    <main className="main-area"><header className="topbar"><div className="topbar-left"><button className="mobile-menu icon-button" aria-label="Open navigation" onClick={()=>setMenu(true)}><Menu size={18}/></button><div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14}/><b>{page}</b></div></div><div className="topbar-actions"><label className="global-search"><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search anything..."/><kbd>⌘ K</kbd></label><span className="topbar-divider"/><button className="period-button sql-toggle" aria-pressed={showOps} aria-label="Show Database Operations" title="Show Database Operations" onClick={()=>opLog.setShowOps(!showOps)}><Database size={15}/>Database Operations<i className="sql-toggle-dot"/></button><button className="period-button" onClick={()=>setDateRange(dateRange==='Last 30 days'?'Last 7 days':'Last 30 days')}><CalendarDays size={15}/>{dateRange}<ChevronDown size={14}/></button><div className="notification-wrap"><IconButton icon={Bell} label="Notifications" onClick={()=>setNotif(!notif)}/><i className="notification-indicator"/>{notif&&<div className="notification-pop"><b>Notifications</b><p><CheckCircle2/> Sync complete · just now</p><p><CreditCard/> {bills.filter(b=>b.status==='Pending'||b.status==='Overdue').length} bills awaiting payment</p><p><Gauge/> {meters.length} connected meters</p><button onClick={()=>setNotif(false)}>Mark all as read</button></div>}</div><div className="avatar avatar-user top-avatar">{(profile?.full_name||profile?.email||'GF').slice(0,2).toUpperCase()}</div></div></header>
     <div className="page-content"><AnimatePresence mode="wait"><motion.div key={page} initial={{opacity:0,y:reduced?0:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-5}} transition={{duration:.2}}>
@@ -93,10 +93,173 @@ function Landing({openDashboard,openLogin,go}:{openDashboard:()=>void;openLogin:
 
 function FeatureCard({icon:Icon,tag,title,copy,color,onClick}:{icon:LucideIcon;tag:string;title:React.ReactNode;copy:string;color:string;onClick:()=>void}){return <button className={`feature-card feature-${color}`} onClick={onClick}><div className="feature-head"><span className="feature-icon"><Icon size={20}/></span><ArrowUpRight size={17}/></div><span className="feature-tag">{tag}</span><h3>{title}</h3><p>{copy}</p><span className="feature-line"/></button>}
 
-function Login({onBack,onSignIn,demoMode}:{onBack:()=>void;onSignIn:(u:string,p:string)=>void;demoMode:boolean}){
- const [user,setUser]=useState(''),[pass,setPass]=useState(''),[show,setShow]=useState(false),[error,setError]=useState(demoMode?'Configure the Supabase project URL and publishable key before signing in.':''),[busy,setBusy]=useState(false)
- const submit=async(e:React.FormEvent)=>{e.preventDefault();if(!user.trim()||!pass.trim()){setError('Enter a username and password to continue.');return}setBusy(true);setError('');try{await onSignIn(user,pass)}finally{setBusy(false)}}
- return <div className="login-screen"><video className="hero-video login-video" autoPlay loop muted playsInline><source src="/videos/gemini-loop.webm" type="video/webm"/></video><div className="login-overlay"/><button className="login-back" onClick={onBack}><ArrowLeft size={17}/> Back to overview</button><div className="login-center"><div className="login-brand"><Brand light/></div><div className="login-card"><div className="login-logo"><Zap size={21}/></div><div className="login-eyebrow">SECURE ACCESS PORTAL</div><h1>Administrator<br/>access.</h1><p className="login-sub">Sign in with your GridFlow administrator account.</p><form onSubmit={submit}><label htmlFor="login-user">Email</label><div className="login-input-wrap"><UserRound size={17}/><input id="login-user" type="email" autoComplete="username" value={user} onChange={e=>setUser(e.target.value)} placeholder="you@company.com"/></div><label htmlFor="login-pass">Password</label><div className="login-input-wrap"><LockKeyhole size={17}/><input id="login-pass" type={show?'text':'password'} autoComplete="current-password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="Enter your password"/><button type="button" aria-label={show?'Hide password':'Show password'} onClick={()=>setShow(!show)}>{show?<EyeOff size={16}/>:<Eye size={16}/>}</button></div>{error&&<div className="login-error"><CircleAlert size={14}/>{error}</div>}<button className="button-primary login-submit" disabled={busy||demoMode}>{busy?'Connecting…':'Access control center'}<ArrowRight size={17}/></button></form><div className="login-foot"><Shield size={13}/> SECURE CONNECTION <i/><span className="live-dot"/> SYSTEM ONLINE</div></div><span className="login-copyright">© 2026 GridFlow Technologies</span></div><div className="login-side-caption"><i/> POWERING A CLEARER FUTURE <span>GRIDFLOW ADMIN PORTAL</span></div></div>
+function Login({
+  onBack,
+  onAdminSignIn,
+  onConsumerSignIn
+}: {
+  onBack: () => void;
+  onAdminSignIn: (u: string, p: string) => Promise<{ ok: boolean; message?: string }>;
+  onConsumerSignIn: (email: string, acct: string) => Promise<{ ok: boolean; message?: string }>;
+}) {
+  const [tab, setTab] = useState<'admin' | 'consumer'>('admin')
+  const [adminEmail, setAdminEmail] = useState(SUPER_ADMIN_EMAIL)
+  const [adminPass, setAdminPass] = useState(SUPER_ADMIN_PASS)
+  const [consumerEmail, setConsumerEmail] = useState('')
+  const [consumerAcct, setConsumerAcct] = useState('')
+  const [show, setShow] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!adminEmail.trim() || !adminPass.trim()) {
+      setError('Enter your administrator email and password.')
+      return
+    }
+    setBusy(true); setError('')
+    try {
+      const res = await onAdminSignIn(adminEmail, adminPass)
+      if (!res.ok) setError(res.message || 'Authentication failed.')
+    } finally { setBusy(false) }
+  }
+
+  const handleConsumerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!consumerEmail.trim() || !consumerAcct.trim()) {
+      setError('Please enter both your registered email and Account ID.')
+      return
+    }
+    setBusy(true); setError('')
+    try {
+      const res = await onConsumerSignIn(consumerEmail, consumerAcct)
+      if (!res.ok) setError(res.message || 'Consumer verification failed.')
+    } finally { setBusy(false) }
+  }
+
+  return (
+    <div className="login-screen">
+      <video className="hero-video login-video" autoPlay loop muted playsInline preload="metadata">
+        <source src="/videos/gemini-loop.webm" type="video/webm" />
+      </video>
+      <div className="login-overlay" />
+      <button className="login-back" onClick={onBack}><ArrowLeft size={16} /> Back to overview</button>
+      <div className="login-center">
+        <div className="login-brand"><Brand light /></div>
+        <div className="login-card">
+          <div className="login-logo"><Zap size={22} /></div>
+          <div className="login-eyebrow">
+            {tab === 'admin' ? 'SYSTEM CONTROL CENTER' : 'CONSUMER PORTAL'}
+          </div>
+          <h1>{tab === 'admin' ? 'Administrator' : 'Consumer'}<br />access.</h1>
+          <p className="login-sub">
+            {tab === 'admin'
+              ? 'Authorized access for GridFlow system management and database controls.'
+              : 'Passwordless access for utility consumers to view meters and pay bills.'}
+          </p>
+
+          <div className="login-tabs">
+            <button
+              type="button"
+              className={`login-tab-btn ${tab === 'admin' ? 'active' : ''}`}
+              onClick={() => { setTab('admin'); setError('') }}
+            >
+              <Shield size={14} /> Administrator
+            </button>
+            <button
+              type="button"
+              className={`login-tab-btn ${tab === 'consumer' ? 'active' : ''}`}
+              onClick={() => { setTab('consumer'); setError('') }}
+            >
+              <Users size={14} /> Consumer
+            </button>
+          </div>
+
+          {tab === 'admin' ? (
+            <form onSubmit={handleAdminSubmit}>
+              <label htmlFor="admin-email">
+                <span>Administrator email</span>
+                <div className="login-input-wrap">
+                  <UserRound size={17} />
+                  <input
+                    id="admin-email"
+                    type="email"
+                    autoComplete="username"
+                    value={adminEmail}
+                    onChange={e => setAdminEmail(e.target.value)}
+                    placeholder="balaji.c.m.x64@gmail.com"
+                  />
+                </div>
+              </label>
+              <label htmlFor="admin-pass">
+                <span>Password</span>
+                <div className="login-input-wrap">
+                  <LockKeyhole size={17} />
+                  <input
+                    id="admin-pass"
+                    type={show ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={adminPass}
+                    onChange={e => setAdminPass(e.target.value)}
+                    placeholder="Enter password"
+                  />
+                  <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(!show)}>
+                    {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+              <div className="login-hint">Super Admin: <b>balaji.c.m.x64@gmail.com</b></div>
+              {error && <div className="login-error"><CircleAlert size={15} />{error}</div>}
+              <button type="submit" className="button-primary login-submit" disabled={busy}>
+                {busy ? 'Verifying credentials…' : 'Access control center'}
+                <ArrowRight size={17} />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleConsumerSubmit}>
+              <label htmlFor="consumer-email">
+                <span>Registered email</span>
+                <div className="login-input-wrap">
+                  <UserRound size={17} />
+                  <input
+                    id="consumer-email"
+                    type="email"
+                    value={consumerEmail}
+                    onChange={e => setConsumerEmail(e.target.value)}
+                    placeholder="e.g. maya.patel@example.com"
+                  />
+                </div>
+              </label>
+              <label htmlFor="consumer-acct">
+                <span>Account ID / Consumer ID</span>
+                <div className="login-input-wrap">
+                  <FileText size={17} />
+                  <input
+                    id="consumer-acct"
+                    type="text"
+                    value={consumerAcct}
+                    onChange={e => setConsumerAcct(e.target.value)}
+                    placeholder="e.g. GF-2048"
+                  />
+                </div>
+              </label>
+              <div className="login-hint">Passwordless login. Enter the email and Account ID assigned to your connection.</div>
+              {error && <div className="login-error"><CircleAlert size={15} />{error}</div>}
+              <button type="submit" className="button-primary login-submit" disabled={busy}>
+                {busy ? 'Looking up account…' : 'Sign in to Consumer Portal'}
+                <ArrowRight size={17} />
+              </button>
+            </form>
+          )}
+
+          <div className="login-foot">
+            <Shield size={13} /> SECURE PORTAL <i /> <span className="live-dot" /> SYSTEM ONLINE
+          </div>
+        </div>
+        <span className="login-copyright">© 2026 GridFlow Technologies</span>
+      </div>
+    </div>
+  )
 }
 
 
@@ -180,7 +343,7 @@ function titleCase(value:string){return value.charAt(0).toUpperCase()+value.slic
 
 function EntityModal({modal,close,zones,consumers,meters,bills,technicians,refresh,notify}:{modal:Modal;close:()=>void;zones:Zone[];consumers:Consumer[];meters:Meter[];bills:Bill[];technicians:Technician[];refresh:()=>Promise<void>;notify:(m:string,k?:'success'|'error')=>void}){
  const current=modal.id?consumers.find(x=>x.id===modal.id):undefined,currentMeter=modal.id?meters.find(x=>x.id===modal.id):undefined,currentTechnician=modal.id?technicians.find(x=>x.id===modal.id):undefined,isEdit=!!modal.id
- const [name,setName]=useState(current?.name||currentTechnician?.name||''),[account,setAccount]=useState(current?.account||''),[address,setAddress]=useState(current?.address||''),[zone,setZone]=useState(current?.zone||currentTechnician?.zone||(zones[0]?.name||'North End')),[plan,setPlan]=useState(current?.plan||'Residential'),[email,setEmail]=useState(''),[phone,setPhone]=useState(''),[status,setStatus]=useState<string>(current?.status||'Active'),[meterSerial,setMeterSerial]=useState(currentMeter?.serial||''),[consumerId,setConsumerId]=useState(currentMeter?.consumerId||consumers[0]?.id||''),[readingMeter,setReadingMeter]=useState(meters[0]?.id||''),[reading,setReading]=useState(''),[readingDate,setReadingDate]=useState(new Date().toISOString().slice(0,16)),[serviceTech,setServiceTech]=useState(technicians[0]?.id||''),[serviceConsumer,setServiceConsumer]=useState(consumers[0]?.id||''),[serviceMeter,setServiceMeter]=useState(meters[0]?.id||''),[serviceSummary,setServiceSummary]=useState(''),[servicePriority,setServicePriority]=useState('normal'),[serviceDate,setServiceDate]=useState(new Date().toISOString().slice(0,16)),[error,setError]=useState(''),[saving,setSaving]=useState(false),[blockers,setBlockers]=useState<string[]>([])
+ const [name,setName]=useState(current?.name||currentTechnician?.name||''),[account,setAccount]=useState(current?.account||''),[address,setAddress]=useState(current?.address||''),[zone,setZone]=useState(current?.zone||currentTechnician?.zone||(zones[0]?.name||'North End')),[plan,setPlan]=useState(current?.plan||'Residential'),[email,setEmail]=useState(current?.email||''),[phone,setPhone]=useState(current?.phone||''),[status,setStatus]=useState<string>(current?.status||'Active'),[meterSerial,setMeterSerial]=useState(currentMeter?.serial||''),[consumerId,setConsumerId]=useState(currentMeter?.consumerId||consumers[0]?.id||''),[readingMeter,setReadingMeter]=useState(meters[0]?.id||''),[reading,setReading]=useState(''),[readingDate,setReadingDate]=useState(new Date().toISOString().slice(0,16)),[serviceTech,setServiceTech]=useState(technicians[0]?.id||''),[serviceConsumer,setServiceConsumer]=useState(consumers[0]?.id||''),[serviceMeter,setServiceMeter]=useState(meters[0]?.id||''),[serviceSummary,setServiceSummary]=useState(''),[servicePriority,setServicePriority]=useState('normal'),[serviceDate,setServiceDate]=useState(new Date().toISOString().slice(0,16)),[error,setError]=useState(''),[saving,setSaving]=useState(false),[blockers,setBlockers]=useState<string[]>([])
  const zoneOptions=zones.length?zones.map(z=>z.name):['North End','Riverside','Midtown','Eastside']
 
  useEffect(()=>{
@@ -205,3 +368,363 @@ function EntityModal({modal,close,zones,consumers,meters,bills,technicians,refre
  {error&&<div className="form-error"><CircleAlert size={14}/>{error}</div>}<div className="modal-actions"><button type="button" className="button-outline" onClick={close}>Cancel</button><button className="button-primary" disabled={saving}>{modal.type==='bill'?<><Zap size={15}/> Generate bills</>:modal.type==='reading'?'Record reading':modal.type==='service'?'Schedule visit':isEdit?'Save changes':modal.type==='consumer'?'Create consumer':modal.type==='meter'?'Register meter':'Add technician'}{modal.type!=='bill'&&<ArrowRight size={15}/>}</button></div></form>}</motion.div></motion.div>
 }
 function exportRows(rows:unknown[],filename:string){const list=rows as Record<string,unknown>[],keys=Object.keys(list[0]||{}),quote=(v:unknown)=>`"${String(v??'').replaceAll('"','""')}"`,csv=[keys.join(','),...list.map(r=>keys.map(k=>quote(r[k])).join(','))].join('\r\n'),blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
+
+function ConsumerPortal({
+  consumer,
+  meters,
+  bills,
+  serviceRecords,
+  tariffs,
+  refresh,
+  notify,
+  onSignOut
+}: {
+  consumer: Consumer;
+  meters: Meter[];
+  bills: Bill[];
+  serviceRecords: ServiceRecord[];
+  tariffs: Tariff[];
+  refresh: () => Promise<void>;
+  notify: (msg: string, kind?: 'success' | 'error') => void;
+  onSignOut: () => void;
+}) {
+  type ConsumerTab = 'Overview' | 'My Bills' | 'My Meter' | 'Support'
+  const [tab, setTab] = useState<ConsumerTab>('Overview')
+  const [billFilter, setBillFilter] = useState('All statuses')
+  const [paying, setPaying] = useState(false)
+
+  const myBills = bills.filter(b => b.consumer === consumer.name || b.account === consumer.account)
+  const myMeter = meters.find(m => m.consumer === consumer.name || m.consumerId === consumer.id)
+  const myRecords = serviceRecords.filter(s => s.consumer === consumer.name)
+  const unpaidBills = myBills.filter(b => b.status !== 'Paid')
+  const totalDue = unpaidBills.reduce((a, b) => a + b.amount, 0)
+  const myTariff = tariffs.find(t => t.name.toLowerCase() === consumer.plan.toLowerCase() || t.category.toLowerCase() === consumer.plan.toLowerCase())
+
+  const payBill = async (bill: Bill) => {
+    if (!bill.dbId) return
+    setPaying(true)
+    try {
+      await api.markBillPaid(bill.dbId)
+      await refresh()
+      notify(`Payment of ${money(bill.amount)} for ${bill.id} recorded successfully.`)
+    } catch (e) {
+      notify(e instanceof Error ? e.message : 'Payment could not be processed.', 'error')
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <Brand />
+        </div>
+        <div className="workspace-switcher">
+          <span className="workspace-mark">C</span>
+          <div className="workspace-copy">
+            <b>{consumer.name}</b>
+            <small>Account {consumer.account}</small>
+          </div>
+        </div>
+
+        <div className="side-label">CONSUMER PORTAL</div>
+        <nav className="side-nav" aria-label="Consumer navigation">
+          <button className={`side-link ${tab === 'Overview' ? 'selected' : ''}`} onClick={() => setTab('Overview')}>
+            <LayoutDashboard size={18} />
+            <span>Overview</span>
+          </button>
+          <button className={`side-link ${tab === 'My Bills' ? 'selected' : ''}`} onClick={() => setTab('My Bills')}>
+            <FileText size={18} />
+            <span>My Bills</span>
+            {unpaidBills.length > 0 && <span className="nav-count">{unpaidBills.length}</span>}
+          </button>
+          <button className={`side-link ${tab === 'My Meter' ? 'selected' : ''}`} onClick={() => setTab('My Meter')}>
+            <Gauge size={18} />
+            <span>My Smart Meter</span>
+          </button>
+          <button className={`side-link ${tab === 'Support' ? 'selected' : ''}`} onClick={() => setTab('Support')}>
+            <Wrench size={18} />
+            <span>Support & Visits</span>
+          </button>
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sync-card">
+            <div className="sync-card-top">
+              <span className="sync-orb"><RefreshCw size={14} /></span>
+              <b>Smart Meter Synced</b>
+              <i className="live-dot" />
+            </div>
+            <p>Your meter readings and bills are live updated with GridFlow utility network.</p>
+            <div className="sync-foot">
+              <span>Status</span>
+              <b>Active connection</b>
+            </div>
+          </div>
+          <div className="sidebar-user">
+            <div className="avatar avatar-user">{consumer.name.slice(0, 2).toUpperCase()}</div>
+            <div className="sidebar-user-copy">
+              <b>{consumer.name}</b>
+              <small>{consumer.account}</small>
+            </div>
+            <button className="user-more" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-area">
+        <header className="topbar">
+          <div className="topbar-left">
+            <div className="breadcrumbs">
+              <span>Consumer Portal</span>
+              <ChevronRight size={14} />
+              <b>{tab}</b>
+            </div>
+          </div>
+          <div className="topbar-actions">
+            <span className="consumer-badge"><Check size={13} /> {consumer.account} · {consumer.plan}</span>
+            <button className="button-outline" onClick={onSignOut}><LogOut size={14} /> Sign out</button>
+          </div>
+        </header>
+
+        <div className="page-content">
+          {tab === 'Overview' && (
+            <div className="entity-page">
+              <div className="consumer-hero">
+                <div>
+                  <span className="eyebrow" style={{ color: '#9edbff' }}>ACCOUNT SUMMARY</span>
+                  <h2>Welcome, {consumer.name}</h2>
+                  <p>Service Address: {consumer.address} · Zone: {consumer.zone}</p>
+                </div>
+                {totalDue > 0 ? (
+                  <div className="consumer-quick-pay">
+                    <div>
+                      <small style={{ color: '#ffb3b8', fontSize: 11 }}>TOTAL DUE NOW</small>
+                      <div><b>{money(totalDue)}</b></div>
+                    </div>
+                    <button className="button-primary" onClick={() => unpaidBills[0] && payBill(unpaidBills[0])} disabled={paying}>
+                      <CreditCard size={15} /> Pay now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="consumer-quick-pay">
+                    <span style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                      <CheckCircle2 size={18} /> No outstanding dues
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-card-top">
+                    <span>Recorded Usage</span>
+                    <span className="stat-icon blue"><Zap size={18} /></span>
+                  </div>
+                  <div className="stat-value">{consumer.usage.toLocaleString()} <small>kWh</small></div>
+                  <div className="stat-card-bottom"><span>Cumulative connection usage</span></div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-top">
+                    <span>Connected Meter</span>
+                    <span className="stat-icon cyan"><Gauge size={18} /></span>
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 18 }}>{myMeter ? myMeter.serial : 'Installed'}</div>
+                  <div className="stat-card-bottom"><span className="stat-delta">{myMeter ? myMeter.status : 'Active'}</span></div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-top">
+                    <span>Tariff Plan</span>
+                    <span className="stat-icon violet"><Leaf size={18} /></span>
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 20 }}>{consumer.plan}</div>
+                  <div className="stat-card-bottom"><span>{myTariff ? `₹${myTariff.rate_per_kwh}/kWh` : 'Standard utility tariff'}</span></div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-top">
+                    <span>Account Status</span>
+                    <span className="stat-icon green"><Check size={18} /></span>
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 20 }}>{consumer.status}</div>
+                  <div className="stat-card-bottom"><span>Service zone: {consumer.zone}</span></div>
+                </div>
+              </div>
+
+              <div className="panel table-panel">
+                <PageToolbar>
+                  <h3>Recent billing statements</h3>
+                  <button className="button-outline" onClick={() => setTab('My Bills')}>View all bills <ArrowRight size={14} /></button>
+                </PageToolbar>
+                <DataTable headers={['BILL NUMBER', 'PERIOD', 'DUE DATE', 'UNITS', 'AMOUNT', 'STATUS', 'ACTION']}>
+                  {myBills.slice(0, 5).map(b => (
+                    <tr key={b.id}>
+                      <td className="mono-cell">{b.id}</td>
+                      <td>{b.period}</td>
+                      <td>{b.due}</td>
+                      <td>{b.usage.toLocaleString()} kWh</td>
+                      <td><b>{money(b.amount)}</b></td>
+                      <td><StatusPill status={b.status} /></td>
+                      <td>
+                        {b.status !== 'Paid' ? (
+                          <button className="button-primary compact" style={{ height: 30, fontSize: 11 }} onClick={() => payBill(b)} disabled={paying}>
+                            Pay now
+                          </button>
+                        ) : (
+                          <span style={{ color: '#22c55e', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Check size={13} /> Paid
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </DataTable>
+                {myBills.length === 0 && (
+                  <div className="empty-state">
+                    <FileText size={24} />
+                    <b>No bills generated yet</b>
+                    <p>Bills will appear automatically once monthly meter readings are synced.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {tab === 'My Bills' && (
+            <div className="entity-page">
+              <SectionHeading
+                eyebrow="BILLING STATEMENTS"
+                title="My Bills"
+                subtitle="Review your electricity statements, payment receipts, and download CSV history."
+                action={
+                  <button className="button-outline" onClick={() => exportRows(myBills, `bills-${consumer.account}.csv`)}>
+                    <Download size={14} /> Export CSV
+                  </button>
+                }
+              />
+              <div className="panel table-panel">
+                <PageToolbar>
+                  <h3>All statements</h3>
+                  <SelectControl value={billFilter} onChange={setBillFilter} options={['All statuses', 'Paid', 'Pending', 'Overdue']} />
+                </PageToolbar>
+                <DataTable headers={['BILL NUMBER', 'PERIOD', 'DUE DATE', 'UNITS', 'AMOUNT', 'STATUS', 'ACTION']}>
+                  {myBills
+                    .filter(b => billFilter === 'All statuses' || b.status === billFilter)
+                    .map(b => (
+                      <tr key={b.id}>
+                        <td className="mono-cell">{b.id}</td>
+                        <td>{b.period}</td>
+                        <td>{b.due}</td>
+                        <td>{b.usage.toLocaleString()} kWh</td>
+                        <td><b>{money(b.amount)}</b></td>
+                        <td><StatusPill status={b.status} /></td>
+                        <td>
+                          {b.status !== 'Paid' ? (
+                            <button className="button-primary compact" style={{ height: 30, fontSize: 11 }} onClick={() => payBill(b)} disabled={paying}>
+                              Pay now
+                            </button>
+                          ) : (
+                            <span style={{ color: '#22c55e', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Check size={13} /> Paid
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </DataTable>
+                {myBills.length === 0 && (
+                  <div className="empty-state">
+                    <FileText size={24} />
+                    <b>No bills on record</b>
+                    <p>You currently do not have any bills assigned to this account.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {tab === 'My Meter' && (
+            <div className="entity-page">
+              <SectionHeading
+                eyebrow="SMART METERING"
+                title="My Smart Meter"
+                subtitle="Details of the smart meter connected at your service address."
+              />
+              {myMeter ? (
+                <div style={{ maxWidth: 440 }}>
+                  <div className="meter-card panel">
+                    <div className="meter-card-head">
+                      <span className="meter-id-icon"><Gauge size={18} /></span>
+                      <StatusPill status={myMeter.status} />
+                    </div>
+                    <h3>{myMeter.serial}</h3>
+                    <p className="meter-customer">{consumer.name} <span>·</span> {consumer.zone}</p>
+                    <div className="meter-reading">
+                      <span>Latest reading</span>
+                      <b>{myMeter.reading.toLocaleString()} <small>kWh</small></b>
+                    </div>
+                    <div className="meter-signal">
+                      <span>Signal strength</span>
+                      <div className="signal-bars">
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <i key={n} className={myMeter.signal >= n * 20 ? 'signal-on' : ''} />
+                        ))}
+                      </div>
+                      <b>{myMeter.signal || '92'}%</b>
+                    </div>
+                    <div className="meter-card-foot">
+                      <span><i className="live-dot" /> Live sync enabled</span>
+                      <Wifi size={15} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="panel" style={{ padding: 32, textAlign: 'center', color: '#667085' }}>
+                  <Gauge size={32} style={{ marginBottom: 12, color: '#526df1' }} />
+                  <h3 style={{ margin: '0 0 6px', color: '#181f32' }}>Meter installation scheduled</h3>
+                  <p style={{ margin: 0, fontSize: 13 }}>Your connection is registered. The utility field team will assign and install your digital smart meter shortly.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'Support' && (
+            <div className="entity-page">
+              <SectionHeading
+                eyebrow="FIELD OPERATIONS"
+                title="Service & Support"
+                subtitle="View technician visits and maintenance history for your connection."
+              />
+              <div className="panel table-panel">
+                <PageToolbar>
+                  <h3>Service history</h3>
+                </PageToolbar>
+                <DataTable headers={['SUMMARY', 'PRIORITY', 'SCHEDULED FOR', 'TECHNICIAN', 'STATUS']}>
+                  {myRecords.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.summary}</td>
+                      <td><Pill tone="blue">{r.priority || 'Normal'}</Pill></td>
+                      <td>{r.scheduledAt || 'Scheduled'}</td>
+                      <td>{r.technician || 'Assigned field team'}</td>
+                      <td><StatusPill status={r.status || 'Completed'} /></td>
+                    </tr>
+                  ))}
+                </DataTable>
+                {myRecords.length === 0 && (
+                  <div className="empty-state">
+                    <Wrench size={24} />
+                    <b>No service tickets on record</b>
+                    <p>Your connection is operational with zero active maintenance issues.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+

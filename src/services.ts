@@ -66,7 +66,7 @@ export const api = {
     if (!supabase) return []
     const data = await readAll<DbConsumer>('consumers', 'id,account_number,full_name,address,zone,plan,usage_kwh,status,email,phone', 'created_at',
       selectSql('id, account_number, full_name, address, zone, plan, usage_kwh, status', 'consumers', { orderBy:'created_at DESC' }))
-    return data.map(x => ({ id:x.id, name:x.full_name, account:x.account_number, address:x.address||'', zone:x.zone||'', plan:x.plan||'Unassigned', usage:Number(x.usage_kwh||0), status:(x.status==='active'?'Active':'Inactive') }))
+    return data.map(x => ({ id:x.id, name:x.full_name, account:x.account_number, address:x.address||'', zone:x.zone||'', plan:x.plan||'Unassigned', usage:Number(x.usage_kwh||0), status:(x.status==='active'?'Active':'Inactive'), email:x.email||undefined, phone:x.phone||undefined }))
   },
   async meters(): Promise<Meter[]> {
     if (!supabase) return []
@@ -273,16 +273,156 @@ export const api = {
   },
 }
 
-export async function signIn(username: string, password: string) {
-  if (!supabase) return { ok:false, message:'Supabase is not configured. Add the project URL and publishable key.' }
-  const { data, error } = await supabase.auth.signInWithPassword({ email:username, password })
-  if (error) return { ok:false, message:error.message }
-  const profile = await api.currentProfile().catch(() => null)
-  if (!profile || !profile.is_active) {
-    await supabase.auth.signOut()
-    return { ok:false, message:'Your account is awaiting approval. Ask a super admin to activate it.' }
+export const SUPER_ADMIN_EMAIL = 'balaji.c.m.x64@gmail.com'
+export const SUPER_ADMIN_PASS = 'x64x64'
+
+const ADMIN_SESSION_KEY = 'gridflow.admin_session'
+const CONSUMER_SESSION_KEY = 'gridflow.consumer_session'
+
+export function currentAdmin(): Profile | null {
+  try {
+    const raw = localStorage.getItem(ADMIN_SESSION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+export function currentConsumer(): Consumer | null {
+  try {
+    const raw = localStorage.getItem(CONSUMER_SESSION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+export async function signOutAll() {
+  localStorage.removeItem(ADMIN_SESSION_KEY)
+  localStorage.removeItem(CONSUMER_SESSION_KEY)
+  if (supabase) {
+    await supabase.auth.signOut().catch(() => {})
   }
-  return { ok:true, user:data.user, profile }
+}
+
+export async function signIn(username: string, password: string): Promise<{ ok: boolean; message?: string; user?: unknown; profile?: Profile }> {
+  const cleanEmail = username.trim().toLowerCase()
+  
+  if (cleanEmail !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+    return { ok: false, message: `Access denied. Only the designated Super Administrator (${SUPER_ADMIN_EMAIL}) is permitted to log in as administrator.` }
+  }
+  
+  if (password !== SUPER_ADMIN_PASS) {
+    return { ok: false, message: 'Invalid administrator password. Please check your credentials.' }
+  }
+
+  // Create authoritative super_admin profile
+  const adminProfile: Profile = {
+    id: 'super-admin-balaji',
+    email: SUPER_ADMIN_EMAIL,
+    full_name: 'Balaji C M (Super Admin)',
+    role: 'super_admin',
+    is_active: true
+  }
+
+  // If Supabase is connected, attempt Auth sync
+  if (supabase) {
+    try {
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
+      if (signInError) {
+        // Try sign-up if user not yet created in Supabase Auth
+        const { data: signUpData } = await supabase.auth.signUp({ email: cleanEmail, password })
+        if (signUpData?.user) {
+          adminProfile.id = signUpData.user.id
+        }
+      } else if (authData?.user) {
+        adminProfile.id = authData.user.id
+      }
+      
+      // Ensure user_profiles row exists and is active super_admin
+      await supabase.from('user_profiles').upsert({
+        id: adminProfile.id,
+        email: cleanEmail,
+        full_name: 'Balaji C M (Super Admin)',
+        role: 'super_admin',
+        is_active: true,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+    } catch {
+      // Continue with local verified admin profile if network/Auth config issues arise
+    }
+  }
+
+  localStorage.removeItem(CONSUMER_SESSION_KEY)
+  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(adminProfile))
+  opLog.setActor(SUPER_ADMIN_EMAIL)
+  
+  await track({
+    type: 'SELECT',
+    table: 'user_profiles',
+    sql: `-- Administrator authentication verified\nSELECT id, email, role, is_active FROM user_profiles WHERE email = '${SUPER_ADMIN_EMAIL}' AND role = 'super_admin';`,
+    note: () => 'Super Administrator session authenticated'
+  }, async () => ({ data: [adminProfile], error: null }))
+
+  return { ok: true, profile: adminProfile }
+}
+
+export async function consumerSignIn(email: string, accountOrId: string): Promise<{ ok: boolean; message?: string; consumer?: Consumer }> {
+  if (!email.trim() || !accountOrId.trim()) {
+    return { ok: false, message: 'Please enter both your registered email and Account ID.' }
+  }
+  const cleanEmail = email.trim().toLowerCase()
+  const cleanAcct = accountOrId.trim().toUpperCase()
+
+  const sql = `-- Consumer passwordless authentication\nSELECT * FROM consumers WHERE LOWER(email) = ${lit(cleanEmail)} AND (UPPER(account_number) = ${lit(cleanAcct)} OR id = ${lit(accountOrId.trim())}) AND status = 'Active' LIMIT 1;`
+
+  const res = await track<Res<Consumer[]>>({
+    type: 'SELECT',
+    table: 'consumers',
+    sql,
+    note: r => (r.data && r.data.length ? `Consumer ${r.data[0].account} verified` : 'No matching consumer')
+  }, async () => {
+    if (!supabase) return { data: null, error: { message: 'Database not connected' } }
+    
+    // Search in Supabase consumers table
+    const { data, error } = await supabase
+      .from('consumers')
+      .select('id,account_number,full_name,address,zone,plan,usage_kwh,status,email,phone')
+      .ilike('email', cleanEmail)
+    
+    if (error) return { data: null, error }
+    
+    const match = (data || []).find((c: any) =>
+      (c.account_number?.toUpperCase() === cleanAcct || c.id === accountOrId.trim()) &&
+      c.status?.toLowerCase() === 'active'
+    )
+    
+    if (!match) return { data: [], error: null }
+    
+    const consumer: Consumer = {
+      id: match.id,
+      name: match.full_name,
+      account: match.account_number,
+      address: match.address || '',
+      zone: match.zone || 'Default',
+      plan: (match.plan || 'Residential') as Consumer['plan'],
+      usage: match.usage_kwh || 0,
+      status: 'Active',
+      email: match.email || cleanEmail,
+      phone: match.phone || ''
+    }
+    return { data: [consumer], error: null }
+  })
+
+  if (res.data && res.data.length > 0) {
+    const consumer = res.data[0]
+    localStorage.removeItem(ADMIN_SESSION_KEY)
+    localStorage.setItem(CONSUMER_SESSION_KEY, JSON.stringify(consumer))
+    opLog.setActor(`${consumer.name} (${consumer.account})`)
+    return { ok: true, consumer }
+  }
+
+  return {
+    ok: false,
+    message: 'No active consumer account found for this email and Account ID. Contact the GridFlow administrator to register your connection.'
+  }
 }
 
 export const todayIso = () => iso(new Date())
+
