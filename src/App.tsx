@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Activity, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleDollarSign, CircleHelp, ClipboardList, Clock3, CreditCard, Database, Download, Eye, EyeOff, FileBarChart, FileText, Filter, Gauge, Home, Layers3, LayoutDashboard, Leaf, Lightbulb, LockKeyhole, LogOut, MapPin, Menu, MoreHorizontal, Plus, RadioTower, RefreshCw, Search, Settings, Shield, SlidersHorizontal, Sparkles, Trash2, UserRound, Users, Wallet, Wifi, Wrench, X, Zap, type LucideIcon } from 'lucide-react'
 import { type Bill, type Consumer, type Meter, type ServiceRecord, type Technician } from './data'
-import { api, consumerSignIn, currentAdmin, currentConsumer, demoMode, signIn, signOutAll, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, supabase, type Analytics, type Tariff, type Zone } from './services'
+import { api, consumerSignIn, currentAdmin, currentConsumer, demoMode, signIn, signOutAll, SUPER_ADMIN_EMAIL, supabase, type Analytics, type Tariff, type Zone } from './services'
 import { DataTable, PageToolbar, Pill, SearchControl, SectionHeading, SelectControl, StatusPill } from './components/ui'
 import { SqlToasts } from './components/SqlToasts'
 import { DatabaseConsole } from './pages/DatabaseConsole'
@@ -147,7 +147,7 @@ function Login({
 }) {
   const [tab, setTab] = useState<'admin' | 'consumer'>('admin')
   const [adminEmail, setAdminEmail] = useState(SUPER_ADMIN_EMAIL)
-  const [adminPass, setAdminPass] = useState(SUPER_ADMIN_PASS)
+  const [adminPass, setAdminPass] = useState('')
   const [consumerEmail, setConsumerEmail] = useState('')
   const [consumerAcct, setConsumerAcct] = useState('')
   const [show, setShow] = useState(false)
