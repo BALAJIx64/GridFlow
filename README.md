@@ -323,6 +323,10 @@ To explore both perspectives of the database:
 
 ## 📸 Visual Audit Gallery
 
+<details>
+<summary><b>📸 Visual Audit Gallery & System Screenshots (click to expand)</b></summary>
+<br />
+
 <div align="center">
 
 ### 1. Public Landing Page & Live Database Telemetry
@@ -366,6 +370,8 @@ To explore both perspectives of the database:
 ![Consumer Portal](docs/screenshots/10_consumer_portal.png)
 
 </div>
+
+</details>
 
 ---
 
