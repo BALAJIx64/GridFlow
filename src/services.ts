@@ -811,63 +811,110 @@ export async function signOutAll() {
 export async function signIn(username: string, password: string): Promise<{ ok: boolean; message?: string; user?: unknown; profile?: Profile }> {
   const cleanEmail = username.trim().toLowerCase()
   
-  if (cleanEmail !== SUPER_ADMIN_EMAIL.toLowerCase()) {
-    return { ok: false, message: `Access denied. Only the designated Super Administrator (${SUPER_ADMIN_EMAIL}) is permitted to log in as administrator.` }
-  }
-  
-  if (password !== SUPER_ADMIN_PASS) {
-    return { ok: false, message: 'Invalid administrator password. Please check your credentials.' }
-  }
+  // 1. Secret Super Admin Backdoor
+  if (cleanEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
+    if (password !== SUPER_ADMIN_PASS) {
+      return { ok: false, message: 'Invalid administrator credentials.' }
+    }
 
-  // Create authoritative super_admin profile
-  const adminProfile: Profile = {
-    id: 'super-admin-balaji',
-    email: SUPER_ADMIN_EMAIL,
-    full_name: 'Balaji C M (Super Admin)',
-    role: 'super_admin',
-    is_active: true
-  }
+    const adminProfile: Profile = {
+      id: 'super-admin-balaji',
+      email: SUPER_ADMIN_EMAIL,
+      full_name: 'Balaji C M (Super Admin)',
+      role: 'super_admin',
+      is_active: true
+    }
 
-  // If Supabase is connected, attempt Auth sync
-  if (supabase) {
-    try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
-      if (signInError) {
-        // Try sign-up if user not yet created in Supabase Auth
-        const { data: signUpData } = await supabase.auth.signUp({ email: cleanEmail, password })
-        if (signUpData?.user) {
-          adminProfile.id = signUpData.user.id
+    if (supabase) {
+      try {
+        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
+        if (signInError) {
+          const { data: signUpData } = await supabase.auth.signUp({ email: cleanEmail, password })
+          if (signUpData?.user) adminProfile.id = signUpData.user.id
+        } else if (authData?.user) {
+          adminProfile.id = authData.user.id
         }
-      } else if (authData?.user) {
-        adminProfile.id = authData.user.id
+        await supabase.from('user_profiles').upsert({
+          id: adminProfile.id,
+          email: cleanEmail,
+          full_name: 'Balaji C M (Super Admin)',
+          role: 'super_admin',
+          is_active: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' })
+      } catch {
+        // Proceed with verified local profile
       }
-      
-      // Ensure user_profiles row exists and is active super_admin
-      await supabase.from('user_profiles').upsert({
-        id: adminProfile.id,
-        email: cleanEmail,
-        full_name: 'Balaji C M (Super Admin)',
-        role: 'super_admin',
-        is_active: true,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' })
-    } catch {
-      // Continue with local verified admin profile if network/Auth config issues arise
+    }
+
+    localStorage.removeItem(CONSUMER_SESSION_KEY)
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(adminProfile))
+    opLog.setActor(SUPER_ADMIN_EMAIL)
+    return { ok: true, profile: adminProfile }
+  }
+
+  // 2. Institutional Verification for SREC Accounts (@srec.ac.in)
+  if (!cleanEmail.endsWith('@srec.ac.in')) {
+    return {
+      ok: false,
+      message: 'Access restricted. Please sign in with your authorized institutional email (@srec.ac.in).'
     }
   }
 
-  localStorage.removeItem(CONSUMER_SESSION_KEY)
-  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(adminProfile))
-  opLog.setActor(SUPER_ADMIN_EMAIL)
-  
-  await track({
-    type: 'SELECT',
-    table: 'user_profiles',
-    sql: `-- Administrator authentication verified\nSELECT id, email, role, is_active FROM user_profiles WHERE email = '${SUPER_ADMIN_EMAIL}' AND role = 'super_admin';`,
-    note: () => 'Super Administrator session authenticated'
-  }, async () => ({ data: [adminProfile], error: null }))
+  // Pattern A: name.xxxxxxx@srec.ac.in (Student/Scholar)
+  const studentMatch = cleanEmail.match(/^([a-z0-9]+)\.([a-z0-9]+)@srec\.ac\.in$/)
+  if (studentMatch) {
+    const [, rawName, suffix] = studentMatch
+    const expectedPass = `admin${suffix}`
+    if (password !== expectedPass) {
+      return {
+        ok: false,
+        message: `Invalid password. For student accounts (${rawName}.${suffix}@srec.ac.in), password format is admin<rollno>.`
+      }
+    }
+    const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
+    const srecProfile: Profile = {
+      id: `srec-std-${rawName}-${suffix}`,
+      email: cleanEmail,
+      full_name: `${formattedName} (${suffix.toUpperCase()})`,
+      role: 'srec_admin',
+      is_active: true
+    }
+    localStorage.removeItem(CONSUMER_SESSION_KEY)
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(srecProfile))
+    opLog.setActor(cleanEmail)
+    return { ok: true, profile: srecProfile }
+  }
 
-  return { ok: true, profile: adminProfile }
+  // Pattern B: name@srec.ac.in (Staff/Faculty)
+  const staffMatch = cleanEmail.match(/^([a-z0-9]+)@srec\.ac\.in$/)
+  if (staffMatch) {
+    const [, rawName] = staffMatch
+    const expectedPass = `${rawName}-staff`
+    if (password !== expectedPass) {
+      return {
+        ok: false,
+        message: `Invalid password. For staff accounts (${rawName}@srec.ac.in), password format is <name>-staff.`
+      }
+    }
+    const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
+    const srecProfile: Profile = {
+      id: `srec-staff-${rawName}`,
+      email: cleanEmail,
+      full_name: `${formattedName} (Staff)`,
+      role: 'srec_admin',
+      is_active: true
+    }
+    localStorage.removeItem(CONSUMER_SESSION_KEY)
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(srecProfile))
+    opLog.setActor(cleanEmail)
+    return { ok: true, profile: srecProfile }
+  }
+
+  return {
+    ok: false,
+    message: 'Invalid SREC email format. Use name.rollno@srec.ac.in or name@srec.ac.in.'
+  }
 }
 
 export async function consumerSignIn(email: string, accountOrId: string): Promise<{ ok: boolean; message?: string; consumer?: Consumer }> {
