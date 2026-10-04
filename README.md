@@ -1,148 +1,267 @@
-# ⚡️ GridFlow — Next-Gen Smart Energy & Utility Operations Workspace
+# ⚡️ GridFlow — Interactive DBMS & Relational Database Learning Platform
 
 <div align="center">
 
-![GridFlow Status](https://img.shields.io/badge/status-production--ready-brightgreen?style=for-the-badge)
-![React 19](https://img.shields.io/badge/React-19.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%2015-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
+![DBMS Study Project](https://img.shields.io/badge/Project%20Type-DBMS%20%26%20Database%20Study-orange?style=for-the-badge)
+![PostgreSQL 15](https://img.shields.io/badge/Database-PostgreSQL%2015-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![Supabase](https://img.shields.io/badge/BaaS-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![React 19](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/Language-TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Bundler-Vite%207-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Netlify](https://img.shields.io/badge/Hosted%20On-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
 
-**An intelligent, unified cloud workspace for modern electric distribution utilities, smart metering telemetry, automated tariff billing, and field service management.**
+**A hands-on, practical exploration of Relational Database Management Systems (DBMS), SQL querying, and database architecture—using a real-world Smart Energy Grid as the concrete domain case study.**
 
-[Live Application](#-deployment--hosting) • [Core Features](#-core-features) • [System Architecture](#-system-architecture) • [Database & Schema](#-database-schema--data-model) • [Getting Started](#-getting-started) • [Audit Gallery](#-visual-showcase)
+[Project Motivation](#-project-motivation--learning-objectives) • [Interactive DBMS Tools](#-interactive-dbms-learning-tools) • [Domain Case Study](#-domain-case-study-smart-energy-grid) • [Database Architecture](#-relational-database-schema--data-model) • [System Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [Visual Audit Gallery](#-visual-audit-gallery)
 
 </div>
 
 ---
 
-## 📖 Overview
+## 🎯 Project Motivation & Learning Objectives
 
-**GridFlow** is an enterprise-grade utility operations platform built to bridge the gap between high-frequency smart meter telemetry, consumer billing, and real-time field operations. 
+Relational Database Management Systems (DBMS) are often taught through abstract textbook examples and isolated terminal commands. **GridFlow** was specifically built as a **full-stack educational and experimental platform** to bridge the gap between theoretical database concepts and real-world system implementations.
 
-Engineered with a high-performance **React 19** frontend, **TypeScript**, **Framer Motion**, and backed by **Supabase PostgreSQL**, GridFlow powers end-to-end grid monitoring—from tracking kilowatt-hour (`kWh`) load consumption across regional utility zones to dispatching field maintenance crews and automating tiered tariff revenue collections.
+### Key Educational Objectives:
+1. **Relational Schema Design & Normalization**: Understanding how to structure entities, 1-to-many and many-to-many relationships, composite foreign keys, cascading constraints, and data integrity.
+2. **Transparent Query Execution**: Demystifying what happens under the hood when a user clicks a button in a modern web application—exposing the raw `SELECT`, `JOIN`, `INSERT`, `UPDATE`, and `GROUP BY` statements generated in real time.
+3. **Execution Latency & Performance**: Measuring database round-trip times (in milliseconds) and analyzing query complexity and row-return efficiency.
+4. **Database Security & Access Control**: Implementing PostgreSQL Row-Level Security (RLS) to enforce data boundaries between public visitors, registered consumers, and system administrators.
+5. **Applied Domain Complexity**: Using a rich, real-world case study—an **electricity distribution utility** with smart meter telemetry, multi-tiered tariff calculations, billing lifecycles, and field technician dispatch.
 
 ---
 
-## 🌟 Core Features
+## 🔬 Interactive DBMS Learning Tools
 
-### 1. 🛡️ Dual-Portal Access System
-* **Administrator Control Center**: Secure role-based management environment with real-time grid KPI telemetry, database workbenches, consumer directory management, and invoice audits.
-* **Consumer Self-Service Portal**: Frictionless, passwordless portal where energy consumers can view live usage curves, verify connected smart meters, inspect historical bill receipts, and settle utility dues in Indian Rupees (`₹`).
+GridFlow includes specialized, built-in database inspection tools directly in the workspace so students, developers, and evaluators can observe and experiment with the database in action:
 
-### 2. ⚡️ Smart Meter Telemetry & Infrastructure Management
-* Real-time tracking of physical meter hardware across distribution zones (e.g., Chennai, Coimbatore, Madurai, Salem, Tiruchirappalli).
-* Granular telemetry metrics:
-  * Cumulative usage readings (`kWh`).
-  * Live hardware operational status (`ONLINE`, `INACTIVE`, `DISCONNECTED`).
-  * Tamper detection indicators and automated anomaly flagging.
-* Modal dialogs to register new smart meters, link them directly to consumer accounts, and decommission outdated hardware.
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        INTERACTIVE DBMS SUITE                          │
+├──────────────────────────┬─────────────────────────┬───────────────────┤
+│  ⚡ Live SQL Inspector   │   🗃 Database Explorer   │  💻 SQL Console   │
+│  Real-time toasts of SQL │  Visual table browser,  │  In-browser SQL   │
+│  queries, latency (ms),  │  schema constraints,    │  workbench for    │
+│  and returned row counts │  and live row viewer    │  custom queries   │
+└──────────────────────────┴─────────────────────────┴───────────────────┘
+```
 
-### 3. 💳 Automated Utility Billing Engine
-* Multi-tier tariff rating engine supporting:
-  * **Domestic (LT-1A)**: Subsidized and tiered residential consumption blocks.
-  * **Commercial (LT-2A)**: Demand-based business tariffs.
-  * **Industrial (HT-1)**: High-tension industrial load rates.
+### 1. ⚡ Live SQL Operations Inspector
+* Every user action in the admin dashboard (switching tabs, searching, filtering, adding a meter, generating a bill) generates a real-time **SQL Operation Toast**.
+* Each toast displays:
+  * **Raw SQL Statement**: Exact syntax with table aliases, `JOIN` conditions, and `ORDER BY` clauses.
+  * **Execution Latency**: Time elapsed for the query in milliseconds (e.g., `341.2 ms`).
+  * **Result Metric**: Total number of matching rows returned from the database.
+* *Note: Intentionally scoped to the administrative workspace to keep the public landing page clean while providing full transparency during operations.*
+
+### 2. 🗃 In-App Database Explorer
+* Direct visual inspector for all core relational tables in the PostgreSQL database (`consumers`, `meters`, `meter_readings`, `tariffs`, `bills`, `technicians`, `service_records`, `zones`).
+* Allows learners to:
+  * Inspect table structures and relational linkages.
+  * Search, sort, and paginate through records across multiple pages.
+  * View foreign key resolutions (e.g., seeing consumer names alongside meter serial numbers).
+
+### 3. 💻 Diagnostic SQL Workbench / Console
+* Built-in interactive SQL terminal that connects directly to the live PostgreSQL instance.
+* Learners can practice writing and testing SQL queries (aggregations, multi-table joins, subqueries) without needing to configure external tools like pgAdmin or DBeaver.
+
+---
+
+## 🏢 Domain Case Study: Smart Energy Grid
+
+To provide realistic data relationships and challenging query requirements, GridFlow models a modern electric utility operating across **Tamil Nadu, India** (covering zones like Chennai North, Chennai South, Coimbatore, Madurai, Salem, and Tiruchirappalli).
+
+### 1. Smart Meter Telemetry & IoT Simulation
+* Models physical smart meter hardware connected to consumer premises.
+* Tracks operational states (`ONLINE`, `INACTIVE`, `DISCONNECTED`).
+* Simulates time-series cumulative readings (`kWh`), tracking energy usage fluctuations and automated tamper alerts.
+
+### 2. Automated Tiered Tariff & Billing Engine
+* Models real-world utility billing algorithms based on consumption slabs:
+  * **Domestic (LT-1A)**: Subsidized tiered residential consumption.
+  * **Commercial (LT-2A)**: Business and commercial enterprise tariffs.
+  * **Industrial (HT-1)**: High-tension industrial power rates.
   * **Agricultural (LT-4)**: Regulated rural power distribution.
-* Real-time billing status workflows: `PAID`, `PENDING`, and `OVERDUE`.
-* On-the-fly invoice calculations incorporating base energy charges, fixed monthly connection fees, and tax assessments.
+* Automated invoice calculation combining base energy charges, fixed monthly connection fees, and tax assessments in Indian Rupees (`₹`).
+* Lifecycle states: `PAID`, `PENDING`, and `OVERDUE`.
 
-### 4. 🛠️ Field Operations & Technician Dispatch
-* Real-time maintenance crew registry with zone assignments, active job counts, and availability states (`ACTIVE`, `ON_LEAVE`, `BUSY`).
-* Service order lifecycle management: log work orders, schedule on-site inspections for meter defects, and review completion summaries.
+### 3. Field Maintenance & Crew Dispatch
+* Tracks utility field technicians categorized by regional operational zones and availability (`ACTIVE`, `ON_LEAVE`, `BUSY`).
+* Service record management linking technicians, consumers, and meters for maintenance work orders.
 
-### 5. 📊 Executive Analytics & Data Visualization
-* Powered by **Recharts**:
-  * **Grid Load Curves**: Smooth area charts tracking monthly energy delivery trends.
-  * **Category Energy Distribution**: Multi-color bar graphs comparing Domestic vs. Commercial vs. Industrial consumption.
-  * **Revenue Health**: Collection rate tracking and outstanding receivable indicators.
-
-### 6. 🗄️ Embedded Database Console & SQL Explorer
-* **Database Explorer**: Direct browsing interface for core relational tables with sorting, filtering, and pagination.
-* **SQL Workbench**: In-browser SQL execution console allowing administrators to run diagnostic queries directly against the connected Supabase PostgreSQL instance.
+### 4. Dual-Portal Architecture
+* **Administrator Portal**: High-privilege access for grid analytics, hardware provisioning, billing operations, and database diagnostics.
+* **Consumer Portal**: Passwordless self-service portal where consumers verify access via their registered email and unique **Account ID** (e.g., `CON-TN-001`) to inspect their meter telemetry and settle outstanding utility invoices.
 
 ---
 
-## 🏗️ System Architecture
+## 🗃 Relational Database Schema & Data Model
+
+The database is built on PostgreSQL 15 (hosted via Supabase) with a fully normalized 3NF relational schema:
+
+```mermaid
+erDiagram
+    ZONES ||--o{ CONSUMERS : "locates"
+    ZONES ||--o{ TECHNICIANS : "assigns"
+    TARIFFS ||--o{ CONSUMERS : "bills_under"
+    CONSUMERS ||--o{ METERS : "owns"
+    METERS ||--o{ METER_READINGS : "records"
+    CONSUMERS ||--o{ BILLS : "billed_to"
+    METERS ||--o{ BILLS : "measured_by"
+    CONSUMERS ||--o{ SERVICE_RECORDS : "requests"
+    METERS ||--o{ SERVICE_RECORDS : "concerns"
+    TECHNICIANS ||--o{ SERVICE_RECORDS : "serviced_by"
+
+    ZONES {
+        uuid id PK
+        string name
+        string code
+        string headquarters
+    }
+
+    TARIFFS {
+        uuid id PK
+        string name
+        string category
+        decimal rate_per_kwh
+        decimal fixed_charge
+        string currency
+    }
+
+    CONSUMERS {
+        uuid id PK
+        string account_number UK
+        string full_name
+        string email UK
+        string phone
+        uuid zone_id FK
+        uuid tariff_id FK
+    }
+
+    METERS {
+        uuid id PK
+        string serial_number UK
+        uuid consumer_id FK
+        decimal latest_reading
+        string status
+        timestamp installed_at
+    }
+
+    METER_READINGS {
+        uuid id PK
+        uuid meter_id FK
+        decimal reading_value
+        timestamp recorded_at
+        string source
+    }
+
+    BILLS {
+        uuid id PK
+        uuid consumer_id FK
+        uuid meter_id FK
+        decimal units_consumed
+        decimal amount_due
+        string status
+        date bill_date
+        date due_date
+    }
+
+    TECHNICIANS {
+        uuid id PK
+        string full_name
+        string phone
+        uuid zone_id FK
+        string status
+    }
+
+    SERVICE_RECORDS {
+        uuid id PK
+        uuid consumer_id FK
+        uuid meter_id FK
+        uuid technician_id FK
+        string summary
+        string status
+        timestamp scheduled_for
+    }
+```
+
+### Table Reference
+
+| Table | Purpose | Primary Keys & Relationships |
+|---|---|---|
+| **`zones`** | Grid distribution zones & territories | `id` (PK) |
+| **`tariffs`** | Rate structures & fixed charges | `id` (PK) |
+| **`consumers`** | Utility account holders | `id` (PK), `zone_id` (FK), `tariff_id` (FK) |
+| **`meters`** | Installed smart meter hardware | `id` (PK), `consumer_id` (FK) |
+| **`meter_readings`** | Time-series meter telemetry | `id` (PK), `meter_id` (FK) |
+| **`bills`** | Invoices & payment tracking | `id` (PK), `consumer_id` (FK), `meter_id` (FK) |
+| **`technicians`** | Field crew workforce | `id` (PK), `zone_id` (FK) |
+| **`service_records`** | Maintenance tickets & dispatch | `id` (PK), `consumer_id` (FK), `meter_id` (FK), `technician_id` (FK) |
+
+---
+
+## 🔒 Security & Access Control (PostgreSQL RLS)
+
+GridFlow demonstrates modern database security through **PostgreSQL Row Level Security (RLS)**:
+* **Admin Role Isolation**: Restricts schema modification, full table drops, and diagnostic SQL execution to authenticated administrator sessions (`app_metadata.role = 'gridflow_admin'`).
+* **Consumer Isolation**: Consumers are restricted to querying their own linked meters, historical readings, and generated bills based on their verified account identifier.
+* **Public Access**: Public landing page only accesses aggregate metrics (total connected consumers, cumulative kWh delivered, technician counts) without exposing personally identifiable information (PII).
+
+---
+
+## 🏗 System Architecture
 
 ```mermaid
 graph TD
-    Client["Client Browser (React 19 + TypeScript + Vite)"]
-    
-    subgraph "Frontend Layer"
-        Landing["Landing Page (Atmospheric Hero Video + Live Stats)"]
-        Auth["Auth Controller (Admin & Consumer)"]
-        Dash["Admin Workspace (Analytics, Meters, Bills, Crew)"]
-        Portal["Consumer Portal (Account View & Payments)"]
-        SQL["SQL Console & Table Explorer"]
+    Client["Client Layer (React 19 + TypeScript + Vite)"]
+
+    subgraph "Interactive UI & Learning Modules"
+        Landing["Landing Page (Overview + Live Aggregate Stats)"]
+        Auth["Auth Controller (Admin Login & Consumer Verification)"]
+        Workspace["Admin Management Workspace"]
+        ConsumerApp["Consumer Self-Service Portal"]
+        Inspector["Live SQL Operations Inspector (Toasts)"]
+        DBExplorer["Table Explorer & Schema Browser"]
+        SQLConsole["Diagnostic SQL Workbench"]
     end
-    
-    subgraph "Cloud Backend (Supabase)"
-        AuthService["Supabase Auth"]
-        Postgres[("PostgreSQL 15 Database")]
-        RLS["Row Level Security (Admin & Consumer Policies)"]
+
+    subgraph "Database & Backend (Supabase PostgreSQL 15)"
+        AuthService["Supabase Authentication"]
+        PostgresDB[("PostgreSQL 15 Relational DB")]
+        RLSPolicies["Row Level Security (RLS) Engine"]
     end
-    
-    subgraph "Hosting & Infrastructure"
-        Netlify["Netlify Edge CDN (SPA Routing & Automated CI/CD)"]
+
+    subgraph "Deployment & Cloud Infrastructure"
+        Netlify["Netlify Edge (Continuous Deployment & SPA Rewrites)"]
     end
 
     Client --> Netlify
     Netlify --> Landing
     Landing --> Auth
-    Auth --> Dash
-    Auth --> Portal
-    Dash --> SQL
-    
-    Dash <-->|Supabase Client SDK| Postgres
-    Portal <-->|Supabase Client SDK| Postgres
-    Auth <-->|Session Verification| AuthService
-    Postgres --- RLS
+    Auth --> Workspace
+    Auth --> ConsumerApp
+    Workspace --> Inspector
+    Workspace --> DBExplorer
+    Workspace --> SQLConsole
+
+    Workspace <-->|PostgreSQL Queries & RPCs| PostgresDB
+    ConsumerApp <-->|Scoped RLS Queries| PostgresDB
+    Auth <-->|JWT Auth Tokens| AuthService
+    PostgresDB --- RLSPolicies
 ```
 
 ---
 
-## 🗃️ Database Schema & Data Model
+## 🛠 Technology Stack
 
-The backend is structured around a normalized relational model deployed on PostgreSQL:
-
-| Table | Description | Key Attributes |
-|---|---|---|
-| **`consumers`** | Registered utility account holders | `id`, `account_number`, `full_name`, `email`, `phone`, `zone_id`, `tariff_id` |
-| **`meters`** | Physical smart meters installed in premises | `id`, `serial_number`, `consumer_id`, `latest_reading`, `status`, `installed_at` |
-| **`meter_readings`**| Time-series periodic reading history | `id`, `meter_id`, `reading_value`, `recorded_at`, `source` |
-| **`tariffs`** | Rate definitions per utility category | `id`, `name`, `category`, `rate_per_kwh`, `fixed_charge`, `currency` |
-| **`bills`** | Invoices generated per billing cycle | `id`, `consumer_id`, `meter_id`, `units_consumed`, `amount_due`, `status`, `due_date` |
-| **`technicians`** | Field utility operations staff | `id`, `full_name`, `phone`, `zone_id`, `status` |
-| **`service_records`**| On-site maintenance and support tickets | `id`, `consumer_id`, `meter_id`, `technician_id`, `summary`, `status`, `scheduled_for` |
-| **`zones`** | Operational territories and grid sub-stations | `id`, `name`, `code`, `headquarters` |
-
-> Includes a pre-configured seed migration (`supabase/migrations/20261004_seed_tamilnadu_data.sql`) populating realistic distribution infrastructure across 5 major zones (Chennai, Coimbatore, Madurai, Salem, Tiruchirappalli) with 25 consumer premises, connected meters, and field technicians.
-
----
-
-## 🔐 Authentication & Roles
-
-* **Super Administrator**:
-  * **Email**: `balaji.c.m.x64@gmail.com`
-  * Authorized for full workspace management, billing dispatch, and database administration.
-* **Consumer Portal**:
-  * Passwordless verification using registered email and unique **Account ID** (e.g., `CON-TN-001`).
-
----
-
-## 🛠️ Technology Stack
-
-* **Framework**: [React 19](https://react.dev/)
+* **Database**: PostgreSQL 15 via [Supabase](https://supabase.com/)
+* **Frontend**: [React 19](https://react.dev/)
 * **Language**: [TypeScript 5.9](https://www.typescriptlang.org/)
-* **Build System**: [Vite 7](https://vitejs.dev/)
-* **Styling**: Vanilla CSS3 Custom Design System (Glassmorphism, CSS Variables, Hardware-accelerated transitions)
-* **Animations**: [Framer Motion 12](https://www.framer.com/motion/)
-* **Charts & Analytics**: [Recharts 2.15](https://recharts.org/)
-* **Iconography**: [Lucide React](https://lucide.dev/)
-* **Database & BaaS**: [Supabase](https://supabase.com/) (PostgreSQL 15)
-* **Continuous Deployment**: [Netlify](https://www.netlify.com/)
+* **Bundler & Tooling**: [Vite 7](https://vitejs.dev/)
+* **State & Data Visualization**: [Recharts 2.15](https://recharts.org/)
+* **UI Micro-Animations**: [Framer Motion 12](https://www.framer.com/motion/)
+* **Icons**: [Lucide React](https://lucide.dev/)
+* **Hosting & CI/CD**: [Netlify](https://www.netlify.com/) (configured via `netlify.toml`)
 
 ---
 
@@ -152,80 +271,90 @@ The backend is structured around a normalized relational model deployed on Postg
 * **Node.js**: `v20.19.0+` or `v22.12.0+`
 * **npm**: `v10+`
 
-### 1. Clone & Install Dependencies
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/BALAJIx64/GridFlow.git
 cd GridFlow
+```
+
+### 2. Install Dependencies
+```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env.local` file in the project root:
+### 3. Configure Database Credentials
+Create a `.env.local` file in the root directory:
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+*(Pre-configured credentials are provided in `.env.example` for testing).*
 
-### 3. Run Development Server
+### 4. Seed the Database
+Run the seed migration script in your Supabase SQL editor:
+```sql
+supabase/migrations/20261004_seed_tamilnadu_data.sql
+```
+This populates the database with realistic sample utility zones, 25 consumers, meters, historical readings, bills, and field technicians.
+
+### 5. Launch Local Development Server
 ```bash
 npm run dev
 ```
-Navigate to `http://localhost:5173/` in your browser.
+Open your browser and navigate to `http://localhost:5173/`.
 
-### 4. Build for Production
+### 6. Build for Production
 ```bash
 npm run build
 ```
-Production assets will be built to the `/dist` directory.
 
 ---
 
-## 🌐 Deployment & Hosting
+## 🔑 Demo Access Credentials
 
-GridFlow is pre-configured for automated continuous deployment on **Netlify** using [`netlify.toml`](netlify.toml):
+To explore both perspectives of the database:
 
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
-
-1. Connect the GitHub repository in the Netlify Dashboard.
-2. In **Site Configuration > Environment Variables**, supply:
-   * `VITE_SUPABASE_URL`
-   * `VITE_SUPABASE_ANON_KEY`
-3. Netlify automatically triggers atomic builds upon every push to the `main` branch.
+| Portal | Access Method | Credentials |
+|---|---|---|
+| **Administrator** | Email & Password | **Email**: `balaji.c.m.x64@gmail.com`<br>**Password**: *(Entered manually during sign-in)* |
+| **Consumer Portal** | Passwordless Verification | **Email**: `arun.kumar@gmail.com`<br>**Account ID**: `CON-TN-001` |
 
 ---
 
-## 📸 Visual Showcase
+## 📸 Visual Audit Gallery
 
 <div align="center">
 
-### Executive Dashboard & Energy Analytics
-![Executive Dashboard](audit/20261004_202257/01_dashboard_with_tamilnadu_data.png)
-
-### Consumer Directory & Account Management
-![Consumer Directory](audit/20261004_202257/02_consumers_25_tamilnadu_records.png)
-
-### Smart Meter Telemetry & Status Monitoring
-![Smart Meters](audit/20261004_202257/03_meters_25_connected_units.png)
-
-### Revenue Engine & Utility Billing
-![Billing & Revenue](audit/20261004_202257/04_bills_revenue_management.png)
-
-### Field Operations & Crew Management
-![Field Technicians](audit/20261004_202257/05_technicians_15_tamilnadu_crew.png)
-
-### SQL Console & Diagnostic Workbench
+### 1. Database Operations & SQL Console
+*Run diagnostic queries, examine execution plans, and observe database responses.*
 ![Database Console](audit/20261004_202257/08_database_console_operations.png)
 
-### Consumer Self-Service Portal
+### 2. Table Explorer & Relational Schema Browser
+*Inspect columns, foreign keys, and raw rows across all entities.*
+![Database Explorer](audit/20261004_202257/07_database_explorer_tamilnadu_tables.png)
+
+### 3. Executive Dashboard & Real-Time Analytics
+*Live aggregations of load curves, revenue recovery, and hardware status.*
+![Executive Dashboard](audit/20261004_202257/01_dashboard_with_tamilnadu_data.png)
+
+### 4. Consumer Management & Relational Directory
+*Managing consumer entities and linking them to tariffs and zones.*
+![Consumer Directory](audit/20261004_202257/02_consumers_25_tamilnadu_records.png)
+
+### 5. Smart Meter Telemetry & Telemetry Monitoring
+*Tracking physical hardware units and consumption readings.*
+![Smart Meters](audit/20261004_202257/03_meters_25_connected_units.png)
+
+### 6. Billing Engine & Revenue Recovery
+*Automated slab-based invoices in INR (`₹`) with payment status tracking.*
+![Billing & Revenue](audit/20261004_202257/04_bills_revenue_management.png)
+
+### 7. Field Technician Scheduling & Dispatch
+*Assigning service records and tracking technician availability.*
+![Field Technicians](audit/20261004_202257/05_technicians_15_tamilnadu_crew.png)
+
+### 8. Consumer Self-Service Portal
+*Scoped, consumer-isolated view of meter readings and invoice payment.*
 ![Consumer Portal](audit/20261004_202257/10_consumer_portal_tamilnadu_user.png)
 
 </div>
@@ -234,6 +363,6 @@ GridFlow is pre-configured for automated continuous deployment on **Netlify** us
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is open-source under the **MIT License**.
 
-Developed with ⚡️ for modern, transparent utility infrastructure.
+Built for studying, experimenting with, and mastering **Relational Database Management Systems (DBMS)** and modern full-stack application architecture. ⚡️
