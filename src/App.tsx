@@ -230,7 +230,7 @@ function Login({
                     autoComplete="username"
                     value={adminEmail}
                     onChange={e => setAdminEmail(e.target.value)}
-                    placeholder="name.rollno@srec.ac.in or name@srec.ac.in"
+                    placeholder="Email ID"
                   />
                 </div>
               </label>
