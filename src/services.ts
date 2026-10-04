@@ -1,35 +1,288 @@
-import { createClient } from '@supabase/supabase-js'
-import { seedBills, seedConsumers, seedMeters, seedTechnicians, type Bill, type Consumer, type Meter, type Technician } from './data'
+import type { Bill, Consumer, Meter, ServiceRecord, Technician } from './data'
+import { supabase, demoMode } from './lib/supabase'
+import { track, opLog, type TrackMeta } from './lib/opLogger'
+import { deleteSql, eq, insertSql, lit, selectSql, updateSql } from './lib/sql'
+import type { Profile, Role } from './lib/roles'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-export const supabase = url && key ? createClient(url, key) : null
-export const demoMode = !supabase
+export { supabase, demoMode }
 
-const clone = <T,>(items: T[]): T[] => structuredClone(items)
-function load<T>(key: string, initial: T[]): T[] {
-  if (typeof localStorage === 'undefined') return clone(initial)
-  try { const saved = localStorage.getItem(`gridflow:${key}`); return saved ? JSON.parse(saved) as T[] : clone(initial) }
-  catch { return clone(initial) }
+type DbError = { message: string; code?: string } | null
+type Res<D> = { data: D | null; error: DbError; count?: number | null }
+type DbConsumer = { id:string; account_number:string; full_name:string; address:string|null; zone:string|null; plan:string|null; usage_kwh:number|null; status:string; email:string|null; phone:string|null }
+type DbMeter = { id:string; serial_number:string; consumer_id:string|null; consumer: {full_name:string; zone:string|null}|null; latest_reading:number|null; status:string }
+type DbBill = { id:string; bill_number:string; consumer_id:string|null; consumer: {full_name:string;account_number:string}|null; period_start:string; period_end:string; due_date:string|null; usage_kwh:number|null; total_amount:number|null; status:string }
+type DbTechnician = { id:string; full_name:string; zone:string|null; status:string; service_records:{id:string}[] }
+type DbServiceRecord = { id:string; summary:string; status:string; scheduled_for:string|null; technician:{full_name:string}|null; consumer:{full_name:string}|null; meter:{serial_number:string}|null }
+
+export type Tariff = { id:string; name:string; category:string; rate_per_kwh:number; fixed_charge:number; currency:string; is_active:boolean }
+export type Zone = { id:string; name:string; is_active:boolean }
+export type Analytics = { monthly_energy:{month:string;usage_kwh:number}[]; monthly_collection:{month:string;paid:number;pending:number}[]; consumer_distribution:Record<string,number>; recent_activity:{action:string;entity:string;entity_id:string|null;created_at:string}[] }
+export type PersistedOp = { id:number; actor_email:string|null; op_type:string; table_name:string|null; sql_text:string; rows_affected:number|null; duration_ms:number|null; success:boolean; error_message:string|null; created_at:string }
+export type ExplorerTable = { table:string; rows:number }
+export type ExplorerPage = { total:number; columns:{name:string;type:string}[]; rows:Record<string, unknown>[] }
+export type ReportKey = 'counts' | 'zone' | 'tariff' | 'top'
+
+const emptyAnalytics = (): Analytics => ({ monthly_energy: [], monthly_collection: [], consumer_distribution: {}, recent_activity: [] })
+const title = (value:string|null|undefined) => value ? value.split(/[-_ ]/).map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' ') : ''
+const technicianStatus = (value:string) => ({ 'on-site':'On site', 'off-duty':'Off duty', available:'Available' } as Record<string,string>)[value] || title(value)
+const iso = (d:Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+
+const friendly = (e:{message:string;code?:string}) => {
+  switch (e.code) {
+    case '23505': return 'A record with the same unique value already exists.'
+    case '23503': return 'This record is linked to other records and cannot be changed this way.'
+    case '42501': return 'Your role does not permit this action.'
+    default: return e.message
+  }
 }
-function save<T>(key: string, values: T[]): void { if (typeof localStorage !== 'undefined') localStorage.setItem(`gridflow:${key}`, JSON.stringify(values)) }
+const fail = (error: DbError | undefined) => { if (error) throw new Error(friendly(error)) }
+const db = () => { if (!supabase) throw new Error('Supabase is not configured. Add the project URL and publishable key.'); return supabase }
 
-export const db = {
-  consumers: load<Consumer>('consumers', seedConsumers),
-  meters: load<Meter>('meters', seedMeters),
-  bills: load<Bill>('bills', seedBills),
-  technicians: load<Technician>('technicians', seedTechnicians),
-  persist(key: 'consumers' | 'meters' | 'bills' | 'technicians') {
-    if (key === 'consumers') save(key, this.consumers)
-    if (key === 'meters') save(key, this.meters)
-    if (key === 'bills') save(key, this.bills)
-    if (key === 'technicians') save(key, this.technicians)
+async function readAll<T>(table:string, columns:string, order:string, sql:string): Promise<T[]> {
+  const res = await track<Res<T[]>>({ type:'SELECT', table, sql }, async () => {
+    const rows: T[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await db().from(table).select(columns).order(order, { ascending:false }).range(from, from + 999)
+      if (error) return { data:null, error }
+      const batch = (data || []) as unknown as T[]
+      rows.push(...batch)
+      if (batch.length < 1000) break
+    }
+    return { data: rows, error: null }
+  })
+  fail(res.error)
+  return res.data || []
+}
+
+async function write<D = unknown>(meta:TrackMeta, run:() => PromiseLike<Res<D>>) {
+  const res = await track<Res<D>>({ ...meta, write:true }, run)
+  fail(res.error)
+  return res
+}
+
+export const api = {
+  /* ---------------------------------------------------------------- reads */
+  async consumers(): Promise<Consumer[]> {
+    if (!supabase) return []
+    const data = await readAll<DbConsumer>('consumers', 'id,account_number,full_name,address,zone,plan,usage_kwh,status,email,phone', 'created_at',
+      selectSql('id, account_number, full_name, address, zone, plan, usage_kwh, status', 'consumers', { orderBy:'created_at DESC' }))
+    return data.map(x => ({ id:x.id, name:x.full_name, account:x.account_number, address:x.address||'', zone:x.zone||'', plan:x.plan||'Unassigned', usage:Number(x.usage_kwh||0), status:(x.status==='active'?'Active':'Inactive') }))
+  },
+  async meters(): Promise<Meter[]> {
+    if (!supabase) return []
+    const data = await readAll<DbMeter>('meters', 'id,serial_number,consumer_id,latest_reading,status,consumer:consumers(full_name,zone)', 'created_at',
+      selectSql('m.id, m.serial_number, m.latest_reading, m.status, c.full_name, c.zone', 'meters m\nLEFT JOIN consumers c ON c.id = m.consumer_id', { orderBy:'m.created_at DESC' }))
+    return data.map(x => ({ id:x.id, serial:x.serial_number, consumer:x.consumer?.full_name||'Unassigned', consumerId:x.consumer_id||undefined, zone:x.consumer?.zone||'', reading:Number(x.latest_reading||0), status:title(x.status) as Meter['status'], signal:x.status==='online'?100:0 }))
+  },
+  async bills(): Promise<Bill[]> {
+    if (!supabase) return []
+    const data = await readAll<DbBill>('bills', 'id,bill_number,consumer_id,period_start,period_end,due_date,usage_kwh,total_amount,status,consumer:consumers(full_name,account_number)', 'created_at',
+      selectSql('b.bill_number, c.full_name, c.account_number, b.period_start, b.due_date, b.usage_kwh, b.total_amount, b.status', 'bills b\nLEFT JOIN consumers c ON c.id = b.consumer_id', { orderBy:'b.created_at DESC' }))
+    return data.map(x => ({ id:x.bill_number, dbId:x.id, consumer:x.consumer?.full_name||'Unknown consumer', account:x.consumer?.account_number||'',
+      period:new Date(`${x.period_start}T00:00:00`).toLocaleDateString('en-IN',{month:'long',year:'numeric'}),
+      due:x.due_date?new Date(`${x.due_date}T00:00:00`).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—',
+      amount:Number(x.total_amount||0), usage:Number(x.usage_kwh||0), status:title(x.status) as Bill['status'] }))
+  },
+  async technicians(): Promise<Technician[]> {
+    if (!supabase) return []
+    const data = await readAll<DbTechnician>('technicians', 'id,full_name,zone,status,service_records(id)', 'created_at',
+      selectSql('t.id, t.full_name, t.zone, t.status, COUNT(s.id) AS jobs', 'technicians t\nLEFT JOIN service_records s ON s.technician_id = t.id', { groupBy:'t.id', orderBy:'t.created_at DESC' }))
+    return data.map(x => ({ id:x.id, name:x.full_name, initials:x.full_name.split(' ').map(a => a[0]).join('').slice(0,2).toUpperCase(), zone:x.zone||'', jobs:x.service_records?.length||0, status:technicianStatus(x.status) as Technician['status'] }))
+  },
+  async serviceRecords(): Promise<ServiceRecord[]> {
+    if (!supabase) return []
+    const data = await readAll<DbServiceRecord>('service_records', 'id,summary,status,scheduled_for,technician:technicians(full_name),consumer:consumers(full_name),meter:meters(serial_number)', 'scheduled_for',
+      selectSql('s.summary, s.status, s.scheduled_for, t.full_name, c.full_name, m.serial_number', 'service_records s\nLEFT JOIN technicians t ON t.id = s.technician_id\nLEFT JOIN consumers c ON c.id = s.consumer_id\nLEFT JOIN meters m ON m.id = s.meter_id', { orderBy:'s.scheduled_for DESC' }))
+    return data.map(x => ({ id:x.id, summary:x.summary, technician:x.technician?.full_name||'Unassigned', consumer:x.consumer?.full_name||'Unassigned', meter:x.meter?.serial_number||'—', status:title(x.status), scheduledAt:x.scheduled_for?new Date(x.scheduled_for).toLocaleString():'Unscheduled' }))
+  },
+  async tariffs(): Promise<Tariff[]> {
+    if (!supabase) return []
+    const res = await track<Res<Tariff[]>>({ type:'SELECT', table:'tariffs', sql:selectSql('id, name, category, rate_per_kwh, fixed_charge, currency, is_active', 'tariffs', { orderBy:'name' }) },
+      () => db().from('tariffs').select('id,name,category,rate_per_kwh,fixed_charge,currency,is_active').order('name').range(0, 999))
+    fail(res.error)
+    return res.data || []
+  },
+  async zones(): Promise<Zone[]> {
+    if (!supabase) return []
+    const res = await track<Res<Zone[]>>({ type:'SELECT', table:'zones', sql:selectSql('id, name, is_active', 'zones', { orderBy:'name' }) },
+      () => db().from('zones').select('id,name,is_active').order('name').range(0, 999))
+    fail(res.error)
+    return res.data || []
+  },
+  async analytics(): Promise<Analytics> {
+    if (!supabase) return emptyAnalytics()
+    const res = await track<Res<Analytics>>({ type:'SELECT', table:'bills', sql:"SELECT date_trunc('month', period_start) AS month, SUM(usage_kwh) AS usage_kwh,\n       COUNT(*) FILTER (WHERE status = 'paid') AS paid,\n       COUNT(*) FILTER (WHERE status IN ('pending','overdue')) AS pending\nFROM bills\nGROUP BY 1\nORDER BY 1;", rows:r => (r.data?.monthly_energy?.length ?? 0), note:r => `${r.data?.monthly_energy?.length ?? 0} month group(s) aggregated` },
+      () => db().rpc('get_report_analytics'))
+    fail(res.error)
+    return (res.data as Analytics) || emptyAnalytics()
+  },
+  async report(key: ReportKey): Promise<{ rows: Record<string, unknown>[]; sql: string }> {
+    const defs: Record<ReportKey, { rpc:string; args?:Record<string, unknown>; table:string; sql:string }> = {
+      counts: { rpc:'report_table_counts', table:'consumers, meters, bills, payments, technicians', sql:"SELECT 'consumers' AS entity, COUNT(*) AS total, COUNT(*) FILTER (WHERE status = 'active') AS active FROM consumers\nUNION ALL SELECT 'meters', COUNT(*), COUNT(*) FILTER (WHERE status = 'online') FROM meters\nUNION ALL SELECT 'bills', COUNT(*), COUNT(*) FILTER (WHERE status = 'paid') FROM bills\nUNION ALL SELECT 'payments', COUNT(*), COUNT(*) FILTER (WHERE status = 'succeeded') FROM payments\nUNION ALL SELECT 'technicians', COUNT(*), COUNT(*) FILTER (WHERE status = 'available') FROM technicians;" },
+      zone: { rpc:'report_consumption_by_zone', table:'consumers, bills', sql:"SELECT COALESCE(c.zone, 'Unassigned') AS zone, COUNT(DISTINCT c.id) AS consumers, COUNT(b.id) AS bills,\n       COALESCE(SUM(b.usage_kwh), 0) AS total_kwh, COALESCE(SUM(b.total_amount), 0) AS billed_inr\nFROM consumers c\nLEFT JOIN bills b ON b.consumer_id = c.id\nGROUP BY 1\nORDER BY billed_inr DESC;" },
+      tariff: { rpc:'report_revenue_by_tariff', table:'tariffs, consumers, bills', sql:"SELECT t.name AS tariff, t.category, COUNT(b.id) AS bills,\n       COALESCE(SUM(b.total_amount), 0) AS billed_inr,\n       COALESCE(SUM(b.total_amount) FILTER (WHERE b.status = 'paid'), 0) AS collected_inr\nFROM tariffs t\nLEFT JOIN consumers c ON c.tariff_id = t.id\nLEFT JOIN bills b ON b.consumer_id = c.id\nGROUP BY t.id\nORDER BY billed_inr DESC;" },
+      top: { rpc:'report_top_consumers', args:{ p_limit:10 }, table:'consumers, bills', sql:"SELECT c.account_number, c.full_name, c.status, SUM(b.usage_kwh) AS total_kwh, SUM(b.total_amount) AS billed_inr\nFROM consumers c\nJOIN bills b ON b.consumer_id = c.id\nGROUP BY c.id\nORDER BY total_kwh DESC\nLIMIT 10;" },
+    }
+    const d = defs[key]
+    const res = await track<Res<Record<string, unknown>[]>>({ type:'SELECT', table:d.table, sql:d.sql }, () => db().rpc(d.rpc, d.args))
+    fail(res.error)
+    return { rows: res.data || [], sql: d.sql }
+  },
+
+  /* ---------------------------------------------------------------- consumers */
+  async consumer(input: Pick<Consumer,'name'|'account'|'address'|'zone'|'plan'|'status'> & { email?:string; phone?:string }, id?: string) {
+    const lookup = await track<Res<{id:string}>>({ type:'SELECT', table:'tariffs', sql:selectSql('id', 'tariffs', { where:`category = ${lit(input.plan.toLowerCase())} AND is_active = TRUE`, limit:1 }) },
+      () => db().from('tariffs').select('id').eq('category', input.plan.toLowerCase()).eq('is_active', true).maybeSingle())
+    fail(lookup.error)
+    if (!lookup.data) throw new Error(`Create an active ${input.plan.toLowerCase()} tariff before assigning this consumer.`)
+    const row = { full_name:input.name.trim(), account_number:input.account.trim(), address:input.address.trim(), zone:input.zone.trim()||null, plan:input.plan, tariff_id:lookup.data.id, status:input.status.toLowerCase(), email:input.email||null, phone:input.phone||null }
+    const res = id
+      ? await write<{id:string}>({ type:'UPDATE', table:'consumers', sql:updateSql('consumers', row, eq('id', id)) }, () => db().from('consumers').update(row).eq('id', id).select('id').single())
+      : await write<{id:string}>({ type:'INSERT', table:'consumers', sql:insertSql('consumers', row) }, () => db().from('consumers').insert(row).select('id').single())
+    return res.data
+  },
+  async setConsumerStatus(id: string, status: 'active' | 'inactive') {
+    await write({ type:'UPDATE', table:'consumers', sql:updateSql('consumers', { status }, eq('id', id)) }, () => db().from('consumers').update({ status }).eq('id', id).select('id'))
+  },
+  /** Counts the historical records that make a consumer non-deletable. */
+  async consumerBlockers(id: string): Promise<string[]> {
+    const count = async (table:string, column:string, label:string) => {
+      const res = await track<Res<unknown>>({ type:'COUNT', table, sql:`SELECT COUNT(*) FROM ${table} WHERE ${eq(column, id)};`, rows:() => 1, note:r => `COUNT(*) = ${r.count ?? 0}` },
+        () => db().from(table).select('id', { count:'exact', head:true }).eq(column, id))
+      fail(res.error)
+      return res.count ? `${res.count} ${label}` : ''
+    }
+    const parts = await Promise.all([count('bills','consumer_id','bill(s)'), count('meters','consumer_id','meter(s)'), count('service_records','consumer_id','service record(s)')])
+    return parts.filter(Boolean)
+  },
+  async deleteConsumer(id: string) {
+    await write({ type:'DELETE', table:'consumers', sql:deleteSql('consumers', eq('id', id)) }, () => db().from('consumers').delete().eq('id', id).select('id'))
+  },
+
+  /* ---------------------------------------------------------------- meters & readings */
+  async meter(serial: string, consumerId: string, id?: string) {
+    const base = { serial_number:serial.trim(), consumer_id:consumerId }
+    if (id) await write({ type:'UPDATE', table:'meters', sql:updateSql('meters', base, eq('id', id)) }, () => db().from('meters').update(base).eq('id', id).select('id'))
+    else { const row = { ...base, status:'installing' }; await write({ type:'INSERT', table:'meters', sql:insertSql('meters', row) }, () => db().from('meters').insert(row).select('id')) }
+  },
+  async deleteMeter(id: string) {
+    await write({ type:'DELETE', table:'meters', sql:deleteSql('meters', eq('id', id)) }, () => db().from('meters').delete().eq('id', id).select('id'))
+  },
+  async recordMeterReading(meterId: string, reading: number, recordedAt: string) {
+    const row = { meter_id:meterId, reading_kwh:reading, recorded_at:recordedAt, source:'manual' }
+    await write({ type:'INSERT', table:'meter_readings', sql:insertSql('meter_readings', row) }, () => db().from('meter_readings').insert(row).select('id'))
+  },
+
+  /* ---------------------------------------------------------------- technicians & service */
+  async technician(name: string, zone: string, email: string, phone: string, id?: string) {
+    const row = { full_name:name.trim(), zone:zone.trim()||null, email:email||null, phone:phone||null }
+    if (id) await write({ type:'UPDATE', table:'technicians', sql:updateSql('technicians', row, eq('id', id)) }, () => db().from('technicians').update(row).eq('id', id).select('id'))
+    else await write({ type:'INSERT', table:'technicians', sql:insertSql('technicians', row) }, () => db().from('technicians').insert(row).select('id'))
+  },
+  async deleteTechnician(id: string) {
+    await write({ type:'DELETE', table:'technicians', sql:deleteSql('technicians', eq('id', id)) }, () => db().from('technicians').delete().eq('id', id).select('id'))
+  },
+  async serviceRecord(input: { technicianId:string; consumerId:string; meterId:string; summary:string; priority:string; scheduledFor:string }) {
+    const row = { technician_id:input.technicianId, consumer_id:input.consumerId, meter_id:input.meterId, summary:input.summary.trim(), priority:input.priority, status:'scheduled', scheduled_for:input.scheduledFor }
+    await write({ type:'INSERT', table:'service_records', sql:insertSql('service_records', row) }, () => db().from('service_records').insert(row).select('id'))
+  },
+
+  /* ---------------------------------------------------------------- tariffs & zones */
+  async saveTariff(input: Pick<Tariff,'name'|'category'|'rate_per_kwh'|'fixed_charge'|'is_active'>, id?: string) {
+    if (id) await write({ type:'UPDATE', table:'tariffs', sql:updateSql('tariffs', input, eq('id', id)) }, () => db().from('tariffs').update(input).eq('id', id).select('id'))
+    else await write({ type:'INSERT', table:'tariffs', sql:insertSql('tariffs', input) }, () => db().from('tariffs').insert(input).select('id'))
+  },
+  async deleteTariff(id: string) {
+    await write({ type:'DELETE', table:'tariffs', sql:deleteSql('tariffs', eq('id', id)) }, () => db().from('tariffs').delete().eq('id', id).select('id'))
+  },
+  async saveZone(input: { name:string; is_active?:boolean }, id?: string) {
+    const row = { name:input.name.trim(), ...(input.is_active === undefined ? {} : { is_active:input.is_active }) }
+    if (id) await write({ type:'UPDATE', table:'zones', sql:updateSql('zones', row, eq('id', id)) }, () => db().from('zones').update(row).eq('id', id).select('id'))
+    else await write({ type:'INSERT', table:'zones', sql:insertSql('zones', row) }, () => db().from('zones').insert(row).select('id'))
+  },
+  async deleteZone(id: string) {
+    await write({ type:'DELETE', table:'zones', sql:deleteSql('zones', eq('id', id)) }, () => db().from('zones').delete().eq('id', id).select('id'))
+  },
+
+  /* ---------------------------------------------------------------- billing */
+  async generateBills(periodStart: string, periodEnd: string, dueDate: string) {
+    const res = await write<number>({ type:'RPC', table:'bills', sql:`-- generate_bills(): joins consumers, tariffs and meter_readings, inserts one bill per consumer\nSELECT generate_bills(${lit(periodStart)}, ${lit(periodEnd)}, ${lit(dueDate)});`, rows:r => Number(r.data || 0), note:r => `${Number(r.data || 0)} bill(s) inserted` },
+      () => db().rpc('generate_bills', { p_period_start:periodStart, p_period_end:periodEnd, p_due_date:dueDate }))
+    return Number(res.data || 0)
+  },
+  async markBillPaid(id: string) {
+    await write({ type:'RPC', table:'payments', sql:`BEGIN;\nINSERT INTO payments (bill_id, amount, currency, method, status, paid_at)\n  SELECT id, total_amount, currency, 'manual', 'succeeded', NOW() FROM bills WHERE ${eq('id', id)};\nUPDATE bills SET status = 'paid', paid_at = NOW() WHERE ${eq('id', id)};\nCOMMIT;`, rows:() => 1, note:() => '1 payment inserted, 1 bill updated' },
+      () => db().rpc('record_manual_payment', { p_bill_id:id }))
+  },
+  async markOverdue() {
+    const res = await track<Res<number>>({ type:'UPDATE', table:'bills', sql:"UPDATE bills\nSET status = 'overdue'\nWHERE status = 'pending' AND due_date < CURRENT_DATE;", rows:r => Number(r.data || 0), persistWhen:(rows, ok) => ok && (rows ?? 0) > 0 },
+      () => db().rpc('mark_overdue_bills'))
+    return res.error ? 0 : Number(res.data || 0)
+  },
+
+  /* ---------------------------------------------------------------- users & roles */
+  async currentProfile(): Promise<Profile | null> {
+    if (!supabase) return null
+    const { data: auth } = await supabase.auth.getUser()
+    const user = auth.user
+    if (!user) return null
+    opLog.setActor(user.email || null)
+    const load = async () => {
+      const res = await track<Res<Profile>>({ type:'SELECT', table:'user_profiles', sql:selectSql('id, email, full_name, role, is_active', 'user_profiles', { where:eq('id', user.id), limit:1 }) },
+        () => db().from('user_profiles').select('id,email,full_name,role,is_active').eq('id', user.id).maybeSingle())
+      fail(res.error)
+      return res.data
+    }
+    let profile = await load()
+    if (!profile || !profile.is_active) {
+      const boot = await track<Res<boolean>>({ type:'RPC', table:'user_profiles', sql:'-- First-run bootstrap (only succeeds while no active super_admin exists)\nSELECT bootstrap_super_admin();', rows:r => (r.data ? 1 : 0), note:r => (r.data ? 'Caller promoted to super_admin' : 'No change: a super_admin already exists'), persistWhen:(rows, ok) => ok && (rows ?? 0) > 0 },
+        () => db().rpc('bootstrap_super_admin'))
+      if (!boot.error && boot.data) profile = await load()
+    }
+    return profile
+  },
+  async profiles(): Promise<(Profile & { created_at:string })[]> {
+    const res = await track<Res<(Profile & { created_at:string })[]>>({ type:'SELECT', table:'user_profiles', sql:selectSql('id, email, full_name, role, is_active, created_at', 'user_profiles', { orderBy:'created_at' }) },
+      () => db().from('user_profiles').select('id,email,full_name,role,is_active,created_at').order('created_at'))
+    fail(res.error)
+    return res.data || []
+  },
+  async updateProfile(id: string, patch: { role?: Role; is_active?: boolean }) {
+    await write({ type:'UPDATE', table:'user_profiles', sql:updateSql('user_profiles', patch, eq('id', id)) }, () => db().from('user_profiles').update(patch).eq('id', id).select('id'))
+  },
+
+  /* ---------------------------------------------------------------- console & explorer */
+  async operationLogs(limit = 300): Promise<PersistedOp[]> {
+    const res = await db().from('db_operation_logs').select('id,actor_email,op_type,table_name,sql_text,rows_affected,duration_ms,success,error_message,created_at').order('created_at', { ascending:false }).limit(limit)
+    fail(res.error)
+    return (res.data || []) as PersistedOp[]
+  },
+  async explorerTables(): Promise<ExplorerTable[]> {
+    const res = await track<Res<ExplorerTable[]>>({ type:'COUNT', table:'information_schema', sql:"SELECT table_name, COUNT(*) AS row_count\nFROM public tables\nGROUP BY table_name\nORDER BY table_name;", rows:r => r.data?.length ?? 0, note:r => `${r.data?.length ?? 0} table(s) counted` },
+      () => db().rpc('db_explorer_tables'))
+    fail(res.error)
+    return res.data || []
+  },
+  async explorerRows(table: string, o: { limit:number; offset:number; order?:string; desc?:boolean; search?:string }): Promise<ExplorerPage> {
+    const where = o.search ? `CAST(${table} AS TEXT) ILIKE ${lit(`%${o.search}%`)}` : undefined
+    const sql = `${selectSql('*', table, { where, orderBy:o.order ? `${o.order} ${o.desc ? 'DESC' : 'ASC'}` : undefined, limit:o.limit, offset:o.offset })}\n-- total rows: SELECT COUNT(*) FROM ${table}${where ? ` WHERE ${where}` : ''};`
+    const res = await track<Res<ExplorerPage>>({ type:'SELECT', table, sql, rows:r => r.data?.rows?.length ?? 0, note:r => `${r.data?.rows?.length ?? 0} row(s) returned of ${r.data?.total ?? 0}` },
+      () => db().rpc('db_explorer_rows', { p_table:table, p_limit:o.limit, p_offset:o.offset, p_order:o.order ?? null, p_desc:!!o.desc, p_search:o.search || null }))
+    fail(res.error)
+    return res.data || { total:0, columns:[], rows:[] }
   },
 }
 
 export async function signIn(username: string, password: string) {
-  if (username === 'admin@gridflow.demo' && password === 'demo') return { ok: true, demo: true }
-  if (!supabase) return { ok: true, demo: true }
-  const { data, error } = await supabase.auth.signInWithPassword({ email: username, password })
-  return { ok: !error, demo: false, message: error?.message, user: data.user }
+  if (!supabase) return { ok:false, message:'Supabase is not configured. Add the project URL and publishable key.' }
+  const { data, error } = await supabase.auth.signInWithPassword({ email:username, password })
+  if (error) return { ok:false, message:error.message }
+  const profile = await api.currentProfile().catch(() => null)
+  if (!profile || !profile.is_active) {
+    await supabase.auth.signOut()
+    return { ok:false, message:'Your account is awaiting approval. Ask a super admin to activate it.' }
+  }
+  return { ok:true, user:data.user, profile }
 }
+
+export const todayIso = () => iso(new Date())
